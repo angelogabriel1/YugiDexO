@@ -1,0 +1,12 @@
+{
+  "name": "yugidex-ecosystem",
+  "private": true,
+  "workspaces": [
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm --workspace server run dev",
+    "start": "npm --workspace server start",
+    "test": "npm --workspace server test"
+  }
+}

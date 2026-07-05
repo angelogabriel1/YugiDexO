@@ -1,0 +1,33 @@
+{
+  "name": "yugidex-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "db:setup": "node scripts/apply-neon-schema.js",
+    "db:status": "node scripts/neon-status.js",
+    "legacy:status": "node scripts/legacy-status.js",
+    "legacy:migrate": "node scripts/migrate-supabase-data.js",
+    "auth:smoke": "node scripts/auth-smoke.js",
+    "r2:sync": "node scripts/sync-card-images.js",
+    "r2:status": "node scripts/r2-status.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1079.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "pg": "^8.22.0",
+    "zod": "^3.24.2"
+  }
+}

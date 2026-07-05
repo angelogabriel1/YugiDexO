@@ -1,0 +1,149 @@
+:root {
+  --pharaoh-gold: #ffd54f;
+  --mystic-gold: #d4af37;
+  --gold-glow: #fff6b3;
+  --dark-obsidian: #0a0814;
+  --card-violet: #241442;
+  --spell-purple: #1b0d2d;
+  --text-gray: #a0a0c0;
+  --surface: rgba(36, 20, 66, .7);
+}
+
+* { box-sizing: border-box; }
+html { color-scheme: dark; scroll-behavior: smooth; }
+body { margin: 0; min-height: 100vh; color: #f9f5ff; background: radial-gradient(circle at 50% -10%, #36205d 0, var(--spell-purple) 34%, var(--dark-obsidian) 75%); font-family: Inter, ui-sans-serif, system-ui, sans-serif; overflow-x: hidden; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.cosmos { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+.stars, .sparkles { position: absolute; inset: -30%; background-image: radial-gradient(circle, rgba(255,246,179,.75) 0 1px, transparent 1.5px); background-size: 67px 67px; animation: drift 35s linear infinite; opacity: .35; }
+.sparkles { background-size: 173px 173px; filter: drop-shadow(0 0 5px var(--pharaoh-gold)); animation-duration: 55s; animation-direction: reverse; }
+@keyframes drift { to { transform: translate3d(80px, 100px, 0) rotate(2deg); } }
+
+.loader { min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 24px; color: var(--pharaoh-gold); letter-spacing: .12em; text-transform: uppercase; text-align: center; }
+.puzzle { width: min(40vw, 180px); filter: drop-shadow(0 0 18px rgba(255,213,79,.55)); animation: awaken 2.5s ease-in-out infinite; }
+@keyframes awaken { 50% { transform: rotateY(180deg) scale(1.08); filter: drop-shadow(0 0 34px var(--pharaoh-gold)); } }
+.app { width: min(1220px, calc(100% - 32px)); margin: auto; padding: 64px 0 100px; }
+.hero { position: relative; text-align: center; padding: 50px 16px 46px; }
+.sigil { font-family: serif; font-size: 54px; color: var(--pharaoh-gold); filter: drop-shadow(0 0 14px rgba(255,213,79,.65)); }
+.eyebrow { margin: 8px 0 14px; color: var(--mystic-gold); font-size: .72rem; letter-spacing: .32em; }
+h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.35rem, 7vw, 5.2rem); font-weight: 500; line-height: 1; text-wrap: balance; }
+h1 span { color: var(--pharaoh-gold); text-shadow: 0 0 25px rgba(255,213,79,.25); }
+.summary { color: var(--text-gray); }
+.toolbar { position: sticky; top: 12px; z-index: 8; display: grid; grid-template-columns: minmax(220px, 1fr) auto auto; gap: 12px; margin-bottom: 32px; padding: 12px; border: 1px solid rgba(255,213,79,.2); border-radius: 18px; background: rgba(10,8,20,.76); backdrop-filter: blur(22px); box-shadow: 0 18px 50px rgba(0,0,0,.25); }
+.search { display: flex; align-items: center; gap: 10px; padding: 0 16px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; color: var(--pharaoh-gold); }
+.search input { width: 100%; border: 0; outline: 0; padding: 13px 0; color: white; background: transparent; }
+select, .summon-button { min-height: 48px; padding: 0 18px; border: 1px solid rgba(255,213,79,.28); border-radius: 12px; color: white; background: var(--card-violet); }
+.summon-button { color: #171004; font-weight: 800; background: linear-gradient(135deg, var(--gold-glow), var(--mystic-gold)); box-shadow: 0 0 25px rgba(255,213,79,.24); }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: clamp(18px, 3vw, 32px); perspective: 1200px; }
+.card { position: relative; padding: 9px 9px 15px; border: 1px solid rgba(255,213,79,.25); border-radius: 14px; background: linear-gradient(150deg, rgba(65,39,105,.76), rgba(16,10,30,.92)); box-shadow: 0 16px 35px rgba(0,0,0,.4); transition: transform .25s ease, border-color .25s, box-shadow .25s; transform-style: preserve-3d; overflow: hidden; cursor: pointer; }
+.card::after { content: ''; position: absolute; inset: -70% -100%; background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,.24) 50%, transparent 60%); transform: translateX(-35%); transition: transform .65s; pointer-events: none; }
+.card:hover { transform: translateY(-10px) rotateX(3deg) rotateY(-3deg); border-color: var(--pharaoh-gold); box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 24px rgba(255,213,79,.14); }
+.card:hover::after { transform: translateX(45%); }
+.card img { display: block; width: 100%; aspect-ratio: 421/614; object-fit: cover; border-radius: 8px; background: #100a1c; }
+.card h2 { margin: 13px 5px 4px; font: 600 1rem/1.3 Georgia, serif; }
+.card-meta { display: flex; justify-content: space-between; gap: 8px; margin: 0 5px; color: var(--text-gray); font-size: .75rem; }
+.quantity { color: var(--pharaoh-gold); }
+.empty { padding: 90px 20px; text-align: center; color: var(--text-gray); }
+.empty span { font-size: 72px; color: var(--mystic-gold); }
+
+.modal { width: min(900px, calc(100% - 24px)); max-height: calc(100vh - 24px); padding: 0; overflow: auto; border: 1px solid var(--mystic-gold); border-radius: 22px; color: white; background: linear-gradient(145deg, #29164a, #0b0815 70%); box-shadow: 0 0 80px rgba(212,175,55,.25); }
+.modal::backdrop { background: rgba(3,2,8,.83); backdrop-filter: blur(8px); }
+.close { position: sticky; float: right; top: 14px; right: 14px; z-index: 3; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.17); border-radius: 50%; color: white; background: rgba(10,8,20,.8); font-size: 25px; }
+.modal-body { display: grid; grid-template-columns: minmax(220px, 330px) 1fr; gap: 30px; padding: 30px; }
+.modal-body > img { width: 100%; border-radius: 12px; box-shadow: 0 25px 70px #000; }
+.details h2 { margin: 10px 0 4px; color: var(--pharaoh-gold); font: 500 clamp(1.8rem, 5vw, 3rem)/1.05 Georgia, serif; }
+.details .subtitle { color: var(--text-gray); }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+.stats span { padding: 7px 10px; border: 1px solid rgba(255,213,79,.25); border-radius: 30px; background: rgba(255,213,79,.07); font-size: .8rem; }
+.description { color: #d6d1e6; line-height: 1.7; }
+.prices { display: grid; gap: 7px; margin-top: 20px; }
+.price { display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 9px; background: rgba(255,255,255,.05); }
+.price strong { color: var(--pharaoh-gold); white-space: nowrap; }
+.skeleton { min-height: 470px; border-radius: 14px; background: linear-gradient(100deg, rgba(255,255,255,.03) 30%, rgba(255,213,79,.12) 50%, rgba(255,255,255,.03) 70%); background-size: 300% 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { to { background-position: -150% 0; } }
+.toast { position: fixed; right: 20px; bottom: 20px; z-index: 30; max-width: calc(100% - 40px); padding: 14px 18px; border: 1px solid var(--mystic-gold); border-radius: 12px; background: #211238; box-shadow: 0 15px 40px #000; transform: translateY(150%); transition: transform .3s; }
+.toast.show { transform: translateY(0); }
+
+/* Ritual individual antes de abrir os detalhes de uma carta lendaria. */
+.card-summon { --summon: var(--mystic-gold); position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; overflow: hidden; isolation: isolate; background: radial-gradient(circle at center, color-mix(in srgb, var(--summon) 22%, #130820) 0, rgba(4,2,9,.98) 62%); animation: summon-veil .35s both; }
+.card-summon[hidden] { display: none; }
+.card-summon.kind-exodia { --summon: #ffd54f; }
+.card-summon.kind-blue-eyes { --summon: #bdefff; }
+.card-summon.kind-dark-magician { --summon: #b06cff; }
+.card-summon.kind-god { --summon: #ffd54f; }
+.card-summon.kind-red-eyes { --summon: #ff4d45; }
+.card-summon.kind-legendary { --summon: #d4af37; }
+.card-summon::before { content: ''; position: absolute; left: 50%; top: -20%; width: min(58vw, 560px); height: 140%; translate: -50% 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--summon) 28%, transparent), rgba(255,255,255,.16), color-mix(in srgb, var(--summon) 28%, transparent), transparent); clip-path: polygon(44% 0,56% 0,100% 100%,0 100%); filter: blur(12px); animation: divine-beam 2.4s ease-out both; }
+.summon-rays { position: absolute; width: max(140vw, 140vh); aspect-ratio: 1; background: repeating-conic-gradient(from 0deg, transparent 0 10deg, color-mix(in srgb, var(--summon) 16%, transparent) 11deg 12deg); animation: summon-spin 16s linear infinite; }
+.summon-ring { position: absolute; width: min(82vw, 650px); aspect-ratio: 1; border: 3px solid var(--summon); border-radius: 50%; box-shadow: inset 0 0 32px color-mix(in srgb, var(--summon) 48%, transparent), 0 0 40px color-mix(in srgb, var(--summon) 45%, transparent); animation: ring-arrive 1.1s cubic-bezier(.17,.84,.25,1) both, summon-spin 9s 1.1s linear infinite; }
+.ring-inner { width: min(62vw, 480px); border-width: 1px; outline: 2px dashed color-mix(in srgb, var(--summon) 70%, transparent); outline-offset: 22px; animation: ring-arrive 1.25s .12s cubic-bezier(.17,.84,.25,1) both, summon-spin-reverse 7s 1.3s linear infinite; }
+.summon-glyphs { position: absolute; color: var(--summon); font: clamp(1rem, 3vw, 2rem)/1 serif; letter-spacing: clamp(.5rem, 3vw, 2.5rem); text-shadow: 0 0 16px var(--summon); transform: translateY(min(35vw, 265px)); opacity: .72; animation: glyph-awaken 1.3s .45s both; }
+.summon-card-wrap { position: relative; z-index: 4; width: min(34vw, 270px); aspect-ratio: 421/614; transform-style: preserve-3d; animation: summon-card-reveal 2.3s .35s cubic-bezier(.16,.78,.24,1) both; }
+.summon-card-wrap::after { content: ''; position: absolute; inset: -14px; z-index: -1; border-radius: 18px; background: var(--summon); filter: blur(24px); opacity: .55; animation: aura-pulse .55s ease-in-out infinite alternate; }
+.summon-card-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; box-shadow: 0 25px 90px #000; }
+.summon-copy { position: absolute; z-index: 5; top: clamp(24px, 7vh, 70px); display: grid; gap: 7px; width: min(90%, 740px); text-align: center; text-transform: uppercase; animation: copy-descend .7s 1.5s both; }
+.summon-copy strong { color: var(--summon); font: 700 clamp(1.2rem, 4vw, 2.4rem)/1.1 Georgia, serif; letter-spacing: .12em; text-shadow: 0 0 20px var(--summon); }
+.summon-copy span { color: #e8def5; font-size: clamp(.7rem, 1.8vw, 1rem); letter-spacing: .08em; }
+.skip-summon { position: absolute; z-index: 8; right: 24px; bottom: 22px; padding: 10px 16px; border: 1px solid color-mix(in srgb, var(--summon) 58%, transparent); border-radius: 30px; color: var(--summon); background: rgba(10,8,20,.72); backdrop-filter: blur(8px); opacity: .7; }
+.summon-seals { position: absolute; width: min(88vw, 690px); aspect-ratio: 1; animation: summon-spin 13s linear infinite; }
+.summon-seals i { display: none; position: absolute; left: calc(50% - 30px); top: calc(50% - 30px); width: 60px; height: 60px; border: 2px solid var(--summon); border-radius: 50%; box-shadow: 0 0 20px var(--summon), inset 0 0 13px var(--summon); }
+.kind-exodia .summon-seals i { display: block; animation: seal-converge 1.35s calc(var(--i, 0) * .09s) both; }
+.summon-seals i:nth-child(1) { --i: 0; transform: translateY(-280px); }
+.summon-seals i:nth-child(2) { --i: 1; transform: rotate(72deg) translateY(-280px) rotate(-72deg); }
+.summon-seals i:nth-child(3) { --i: 2; transform: rotate(144deg) translateY(-280px) rotate(-144deg); }
+.summon-seals i:nth-child(4) { --i: 3; transform: rotate(216deg) translateY(-280px) rotate(-216deg); }
+.summon-seals i:nth-child(5) { --i: 4; transform: rotate(288deg) translateY(-280px) rotate(-288deg); }
+.summon-lightning { position: absolute; inset: 0; opacity: 0; }
+.kind-blue-eyes .summon-lightning, .kind-god .summon-lightning, .kind-red-eyes .summon-lightning { opacity: 1; }
+.summon-lightning i { position: absolute; left: 50%; top: 50%; width: clamp(160px, 36vw, 470px); height: 4px; background: linear-gradient(90deg, transparent, var(--summon), white); clip-path: polygon(0 30%,30% 0,45% 60%,67% 14%,100% 40%,70% 54%,48% 100%,28% 46%); filter: drop-shadow(0 0 7px var(--summon)); transform-origin: left center; animation: lightning-flash .34s infinite alternate; }
+.summon-lightning i:nth-child(1) { rotate: 12deg; }
+.summon-lightning i:nth-child(2) { rotate: 72deg; animation-delay: -.12s; }
+.summon-lightning i:nth-child(3) { rotate: 132deg; animation-delay: -.24s; }
+.summon-lightning i:nth-child(4) { rotate: 192deg; animation-delay: -.06s; }
+.summon-lightning i:nth-child(5) { rotate: 252deg; animation-delay: -.19s; }
+.summon-lightning i:nth-child(6) { rotate: 312deg; animation-delay: -.29s; }
+.kind-dark-magician .ring-inner { border-style: dashed; box-shadow: 0 0 55px #8b32e8, inset 0 0 70px rgba(92,20,153,.5); }
+.kind-red-eyes { background: radial-gradient(circle at 50% 70%, rgba(140,12,8,.58), rgba(3,2,6,.98) 66%); }
+
+@keyframes summon-veil { from { opacity: 0; } }
+@keyframes summon-spin { to { rotate: 360deg; } }
+@keyframes summon-spin-reverse { to { rotate: -360deg; } }
+@keyframes divine-beam { from { opacity: 0; scale: .1 1; } 45% { opacity: 1; } to { opacity: .6; scale: 1; } }
+@keyframes ring-arrive { from { opacity: 0; scale: 2.4; filter: blur(18px); } to { opacity: 1; scale: 1; filter: blur(0); } }
+@keyframes glyph-awaken { from { opacity: 0; letter-spacing: 4rem; filter: blur(9px); } }
+@keyframes summon-card-reveal { 0% { opacity: 0; transform: perspective(900px) rotateY(110deg) translateY(120px) scale(.2); filter: blur(18px) brightness(5); } 58% { opacity: 1; filter: blur(0) brightness(2.3); } 78% { transform: perspective(900px) rotateY(-7deg) translateY(-10px) scale(1.08); filter: brightness(1.35); } 100% { opacity: 1; transform: perspective(900px) rotateY(0) translateY(0) scale(1); filter: brightness(1); } }
+@keyframes aura-pulse { to { opacity: .85; scale: 1.08; } }
+@keyframes copy-descend { from { opacity: 0; translate: 0 -28px; filter: blur(8px); } }
+@keyframes seal-converge { from { opacity: 0; scale: 2.2; filter: blur(10px); } 65% { opacity: 1; } to { opacity: 1; scale: 1; filter: blur(0); } }
+@keyframes lightning-flash { from { opacity: .12; scale: .75 1; } to { opacity: .95; scale: 1.15 1; } }
+
+.summoning { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle, rgba(58,28,95,.7), #030205 68%); }
+.summoning[hidden] { display: none; }
+.magic-circle { position: absolute; width: min(78vw, 650px); aspect-ratio: 1; border: 4px solid var(--pharaoh-gold); border-radius: 50%; box-shadow: inset 0 0 45px var(--mystic-gold), 0 0 65px var(--pharaoh-gold); animation: rotate 8s linear infinite, pulse 1.5s ease-in-out infinite; }
+.magic-circle::before, .magic-circle::after { content: ''; position: absolute; inset: 8%; border: 1px solid var(--gold-glow); border-radius: 50%; }
+.pentagram { display: grid; height: 100%; place-items: center; color: var(--pharaoh-gold); font: min(65vw, 540px)/1 serif; text-shadow: 0 0 35px var(--gold-glow); }
+.beams { position: absolute; inset: -50%; background: repeating-conic-gradient(from 0deg, transparent 0 8deg, rgba(255,246,179,.12) 9deg 10deg); animation: rotate 14s linear infinite reverse; }
+.exodia-reveal { position: relative; z-index: 2; display: grid; justify-items: center; gap: 14px; animation: reveal 1.4s both; }
+.exodia-reveal p { color: var(--gold-glow); font-family: Georgia, serif; letter-spacing: .2em; text-align: center; text-shadow: 0 0 18px var(--pharaoh-gold); }
+.exodia-reveal img { width: min(44vw, 280px); filter: drop-shadow(0 0 30px var(--pharaoh-gold)); }
+.exodia-reveal button { padding: 12px 20px; border: 1px solid var(--pharaoh-gold); border-radius: 30px; color: var(--pharaoh-gold); background: #120b20; }
+@keyframes rotate { to { transform: rotate(360deg); } }
+@keyframes pulse { 50% { opacity: .72; scale: 1.04; } }
+@keyframes reveal { from { opacity: 0; transform: translateY(80px) scale(.7); filter: blur(12px); } }
+
+@media (max-width: 720px) {
+  .app { width: min(100% - 20px, 1220px); padding-top: 30px; }
+  .toolbar { grid-template-columns: 1fr 1fr; }
+  .search { grid-column: 1 / -1; }
+  .summon-button { grid-column: 1 / -1; }
+  .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .modal-body { grid-template-columns: 1fr; padding: 20px; }
+  .modal-body > img { width: min(75%, 330px); margin: auto; }
+  .summon-card-wrap { width: min(58vw, 245px); }
+  .summon-ring { width: 92vw; }
+  .ring-inner { width: 72vw; }
+  .summon-glyphs { bottom: 12vh; transform: none; }
+  .skip-summon { right: 50%; translate: 50% 0; bottom: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }

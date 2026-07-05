@@ -1,0 +1,10 @@
+.env
+node_modules/
+.idea/
+.gradle/
+build/
+**/build/
+local.properties
+*.iml
+server/coverage/
+.agents/

@@ -1,0 +1,10 @@
+.git
+.agents
+.codex
+.env
+**/.env
+node_modules
+**/node_modules
+android
+**/build
+*.apk
