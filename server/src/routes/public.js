@@ -14,13 +14,18 @@ publicRouter.get('/collections/:username', async (req, res) => {
   const profile = profileResult.rows[0];
   if (!profile) return res.status(404).json({ error: 'Duelista nao encontrado' });
   const cards = await pool.query(`
-    select username, card_id, name, image_url, type, attribute, rarity, quantity, saved_at, collection_name
+    select username, card_id, name, image_url, type, attribute, rarity, quantity, saved_at,
+           collection_name, estimated_unit_value
     from cards_public where lower(username) = lower($1) order by saved_at desc
   `, [handle]);
   res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
   res.json({
     profile: { username: profile.username, createdAt: profile.created_at },
-    cards: cards.rows.map(card => ({ ...card, image_url: cardImageUrl(card.card_id, card.image_url) }))
+    cards: cards.rows.map(card => ({
+      ...card,
+      estimated_unit_value: card.estimated_unit_value == null ? null : Number(card.estimated_unit_value),
+      image_url: cardImageUrl(card.card_id, card.image_url)
+    }))
   });
 });
 

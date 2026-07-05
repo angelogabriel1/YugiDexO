@@ -29,15 +29,19 @@ create table if not exists public.cards (
   rarity text,
   collection_name text,
   quantity integer not null default 1 check (quantity between 1 and 999),
+  estimated_unit_value numeric(12, 2) check (estimated_unit_value is null or estimated_unit_value >= 0),
   saved_at timestamptz not null default now(),
   unique (user_id, card_id)
 );
+
+alter table public.cards add column if not exists estimated_unit_value numeric(12, 2)
+  check (estimated_unit_value is null or estimated_unit_value >= 0);
 
 create index if not exists cards_user_saved_idx on public.cards(user_id, saved_at desc);
 create index if not exists cards_name_idx on public.cards using gin (to_tsvector('simple', name));
 
 create or replace view public.cards_public as
 select p.username, c.card_id, c.name, c.image_url, c.type, c.attribute,
-       c.rarity, c.quantity, c.saved_at, c.collection_name
+       c.rarity, c.quantity, c.saved_at, c.collection_name, c.estimated_unit_value
 from public.cards c
 join public.profiles p on p.id = c.user_id;

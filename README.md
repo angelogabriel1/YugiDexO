@@ -8,6 +8,11 @@ Ecossistema para escanear, organizar e compartilhar colecoes de Yu-Gi-Oh!:
 - Cloudflare R2: armazenamento opcional das artes das cartas.
 - Railway: hospedagem do backend e do portal.
 
+O inventario mostra um valor aproximado em reais, calculado pela menor cotacao
+disponivel de cada carta multiplicada pela quantidade. Quando alguma carta ainda
+nao possui cotacao, web e app exibem a cobertura usada no total. No Android, o
+perfil publico pode ser compartilhado pela folha nativa do sistema.
+
 ## Desenvolvimento local
 
 1. Copie `server/.env.example` para `server/.env` e preencha `DATABASE_URL` e `NEON_AUTH_URL`.
@@ -96,6 +101,11 @@ npm test
 npm --workspace server run db:status
 npm --workspace server run auth:smoke
 ```
+
+Antes de uma migracao em producao, gere um backup logico com
+`npm --workspace server run db:backup`. Depois de adicionar o campo de valor a um
+banco existente, `npm --workspace server run db:backfill-values` preenche as
+cotacoes que estiverem faltando.
 
 O `auth:smoke` cria uma conta descartavel, testa autenticacao, sincronizacao,
 download do inventario, portal publico e logout, e remove a conta ao final.

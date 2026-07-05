@@ -15,7 +15,7 @@ interface InventoryDao {
     @Delete suspend fun delete(card: InventoryCard)
 }
 
-@Database(entities = [InventoryCard::class], version = 2, exportSchema = false)
+@Database(entities = [InventoryCard::class], version = 3, exportSchema = false)
 abstract class InventoryDatabase : RoomDatabase() {
     abstract fun inventory(): InventoryDao
     companion object {
@@ -24,9 +24,14 @@ abstract class InventoryDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE inventory_cards ADD COLUMN collectionName TEXT")
             }
         }
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE inventory_cards ADD COLUMN estimatedUnitValue REAL")
+            }
+        }
 
         fun create(context: Context) = Room.databaseBuilder(context, InventoryDatabase::class.java, "ygo_inventory.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
     }
 }

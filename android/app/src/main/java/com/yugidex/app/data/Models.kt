@@ -37,6 +37,7 @@ data class InventoryCard(
     val rarity: String?,
     val collectionName: String? = null,
     val quantity: Int = 1,
+    val estimatedUnitValue: Double? = null,
     val savedAt: String = java.time.Instant.now().toString()
 )
 

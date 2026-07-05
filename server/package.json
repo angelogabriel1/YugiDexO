@@ -7,6 +7,8 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "db:setup": "node scripts/apply-neon-schema.js",
+    "db:backup": "node scripts/backup-database.js",
+    "db:backfill-values": "node scripts/backfill-card-values.js",
     "db:status": "node scripts/neon-status.js",
     "legacy:status": "node scripts/legacy-status.js",
     "legacy:migrate": "node scripts/migrate-supabase-data.js",

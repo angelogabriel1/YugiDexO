@@ -10,6 +10,7 @@ import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.*
@@ -34,6 +35,7 @@ private fun YugidexRoot(vm: YugidexViewModel = viewModel()) {
     val backStack = rememberNavBackStack(ScannerKey)
     val state by vm.state.collectAsStateWithLifecycle()
     val inventory by vm.inventory.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val current = backStack.lastOrNull()
     Scaffold(
         snackbarHost = { SnackbarHost(remember { SnackbarHostState() }) },
@@ -51,7 +53,7 @@ private fun YugidexRoot(vm: YugidexViewModel = viewModel()) {
             entryProvider = entryProvider {
                 entry<ScannerKey> { ScannerScreen(state, onDetection = { detection, requireStability -> vm.identify(detection, requireStability) { backStack.add(DetailsKey) } }) }
                 entry<DetailsKey> { CardDetailsScreen(state.selected, state.loadingDetails, onBack = { backStack.removeLastOrNull() }, onSave = vm::saveSelected) }
-                entry<InventoryKey> { InventoryScreen(inventory, state, onDelete = vm::delete, onSort = vm::toggleSort, onAuth = vm::authenticate, onSync = vm::sync, onLogout = vm::logout) }
+                entry<InventoryKey> { InventoryScreen(inventory, state, onDelete = vm::delete, onSort = vm::toggleSort, onAuth = vm::authenticate, onSync = vm::sync, onLogout = vm::logout, onShare = { shareProfile(context, it) }) }
             }
         )
     }

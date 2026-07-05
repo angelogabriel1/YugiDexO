@@ -2,6 +2,7 @@ const state = { cards: [], visible: [], username: location.pathname.split('/').f
 const $ = selector => document.querySelector(selector);
 const elements = {
   loader: $('#loader'), app: $('#app'), username: $('#username'), summary: $('#summary'),
+  estimatedValue: $('#estimatedValue'), estimatedValueCoverage: $('#estimatedValueCoverage'),
   grid: $('#grid'), empty: $('#empty'), search: $('#search'), rarity: $('#rarity'),
   modal: $('#detailsModal'), modalBody: $('#modalBody'), toast: $('#toast'),
   summonButton: $('#summonButton'), summoning: $('#summoning'), exodiaImage: $('#exodiaImage'),
@@ -101,7 +102,16 @@ async function loadCollection({ live = false } = {}) {
   state.cards = payload.cards;
   elements.username.textContent = payload.profile.username;
   const total = state.cards.reduce((sum, card) => sum + card.quantity, 0);
+  const priced = state.cards.reduce((sum, card) => card.estimated_unit_value == null ? sum : sum + card.quantity, 0);
+  const estimatedValue = state.cards.reduce((sum, card) => {
+    const unitValue = Number(card.estimated_unit_value);
+    return Number.isFinite(unitValue) && unitValue >= 0 ? sum + unitValue * card.quantity : sum;
+  }, 0);
   elements.summary.textContent = `${total} carta${total === 1 ? '' : 's'} • ${state.cards.length} registro${state.cards.length === 1 ? '' : 's'} unicos`;
+  elements.estimatedValue.textContent = formatMoney(estimatedValue);
+  elements.estimatedValueCoverage.textContent = priced < total
+    ? `${priced} de ${total} cartas com cotacao disponivel`
+    : 'Estimativa baseada nas cotacoes disponiveis';
   configureFilters(); render();
   elements.summonButton.hidden = !hasExodia(state.cards);
   document.title = `Colecao de ${payload.profile.username} — Yugidex`;

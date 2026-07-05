@@ -18,13 +18,20 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.yugidex.app.UiState
 import com.yugidex.app.data.InventoryCard
+import com.yugidex.app.data.inventoryValuation
 import com.yugidex.app.ui.*
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
-fun InventoryScreen(cards: List<InventoryCard>, state: UiState, onDelete: (InventoryCard) -> Unit, onSort: () -> Unit, onAuth: (String, String, String?, Boolean) -> Unit, onSync: () -> Unit, onLogout: () -> Unit) {
+fun InventoryScreen(cards: List<InventoryCard>, state: UiState, onDelete: (InventoryCard) -> Unit, onSort: () -> Unit, onAuth: (String, String, String?, Boolean) -> Unit, onSync: () -> Unit, onLogout: () -> Unit, onShare: (String) -> Unit) {
     var query by remember { mutableStateOf("") }
     var authOpen by remember { mutableStateOf(false) }
     val filtered = remember(cards, query) { cards.filter { it.name.contains(query, ignoreCase = true) } }
+    val valuation = remember(cards) { inventoryValuation(cards) }
+    val formattedValue = remember(valuation.value) {
+        NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(valuation.value)
+    }
     Column(Modifier.fillMaxSize().background(DarkObsidian).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) { Text("Meu Inventario", style = MaterialTheme.typography.headlineMedium, color = PharaohGold); Text("${cards.sumOf { it.quantity }} cartas", color = TextGray) }
@@ -34,8 +41,32 @@ fun InventoryScreen(cards: List<InventoryCard>, state: UiState, onDelete: (Inven
             OutlinedTextField(query, { query = it }, Modifier.weight(1f), singleLine = true, leadingIcon = { Icon(Icons.Rounded.Search, null) }, placeholder = { Text("Buscar") })
             if (state.token == null) FilledTonalIconButton(onClick = { authOpen = true }) { Icon(Icons.AutoMirrored.Rounded.Login, "Entrar") }
         }
+        Card(
+            Modifier.fillMaxWidth().padding(top = 12.dp),
+            colors = CardDefaults.cardColors(containerColor = CardViolet)
+        ) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Text("Valor aproximado do inventario", color = TextGray, style = MaterialTheme.typography.labelMedium)
+                Text(formattedValue, color = PharaohGold, style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    if (valuation.pricedQuantity < valuation.totalQuantity)
+                        "${valuation.pricedQuantity} de ${valuation.totalQuantity} cartas com cotacao disponivel"
+                    else "Estimativa baseada nas cotacoes disponiveis",
+                    color = TextGray,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
         state.username?.let { username ->
             Text("Conectado como @$username", Modifier.padding(top = 8.dp), color = MysticGold)
+            OutlinedButton(
+                onClick = { onShare(username) },
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+            ) {
+                Icon(Icons.Rounded.Share, null)
+                Spacer(Modifier.width(6.dp))
+                Text("Compartilhar perfil")
+            }
             Row(
                 Modifier.fillMaxWidth().padding(top = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)

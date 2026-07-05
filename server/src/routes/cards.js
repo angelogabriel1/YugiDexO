@@ -15,12 +15,14 @@ const cardSchema = z.object({
   rarity: z.string().max(100).optional().nullable(),
   collectionName: z.string().trim().max(200).optional().nullable(),
   quantity: z.coerce.number().int().min(1).max(999).default(1),
+  estimatedUnitValue: z.coerce.number().min(0).max(10_000_000).optional().nullable(),
   savedAt: z.string().datetime().optional()
 });
 
 cardsRouter.get('/', requireAuth, async (req, res) => {
   const result = await pool.query(`
-    select card_id, name, image_url, type, attribute, rarity, collection_name, quantity, saved_at
+    select card_id, name, image_url, type, attribute, rarity, collection_name, quantity,
+           estimated_unit_value, saved_at
     from cards where user_id = $1 order by saved_at desc
   `, [req.auth.user.id]);
   res.json({
@@ -33,6 +35,7 @@ cardsRouter.get('/', requireAuth, async (req, res) => {
       rarity: card.rarity,
       collectionName: card.collection_name,
       quantity: card.quantity,
+      estimatedUnitValue: card.estimated_unit_value == null ? null : Number(card.estimated_unit_value),
       savedAt: card.saved_at
     }))
   });
@@ -46,17 +49,20 @@ cardsRouter.post('/sync', requireAuth, async (req, res) => {
     await client.query('delete from cards where user_id = $1', [userId]);
     if (!deduplicated.length) return;
     await client.query(`
-      insert into cards(user_id, card_id, name, image_url, type, attribute, rarity, collection_name, quantity, saved_at)
+      insert into cards(user_id, card_id, name, image_url, type, attribute, rarity, collection_name,
+                        quantity, estimated_unit_value, saved_at)
       select $1, x.card_id, x.name, x.image_url, x.type, x.attribute, x.rarity,
-             x.collection_name, greatest(1, least(999, coalesce(x.quantity, 1))), coalesce(x.saved_at, now())
+             x.collection_name, greatest(1, least(999, coalesce(x.quantity, 1))),
+             x.estimated_unit_value, coalesce(x.saved_at, now())
       from jsonb_to_recordset($2::jsonb) as x(
         card_id bigint, name text, image_url text, type text, attribute text,
-        rarity text, collection_name text, quantity integer, saved_at timestamptz
+        rarity text, collection_name text, quantity integer, estimated_unit_value numeric, saved_at timestamptz
       )
     `, [userId, JSON.stringify(deduplicated.map(card => ({
       card_id: card.cardId, name: card.name, image_url: card.imageUrl,
       type: card.type, attribute: card.attribute, rarity: card.rarity,
       collection_name: card.collectionName, quantity: card.quantity,
+      estimated_unit_value: card.estimatedUnitValue,
       saved_at: card.savedAt ?? new Date().toISOString()
     })))]);
   });

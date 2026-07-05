@@ -40,11 +40,15 @@ class CardRepository(private val ygo: YgoApi, private val backend: YugidexApi, p
 
     suspend fun details(card: Card): Card = runCatching { backend.details(card.id, card.name) }.getOrDefault(card)
 
+    suspend fun estimate(card: InventoryCard): Double? =
+        backend.details(card.cardId, card.name).prices?.min?.takeIf { it.isFinite() && it >= 0 }
+
     suspend fun save(card: Card, collectionName: String?) = dao.save(InventoryCard(
         cardId = card.id, name = card.localized?.name ?: card.name, imageUrl = card.images.firstOrNull()?.url,
         type = card.type, attribute = card.attribute,
         rarity = card.sets.firstOrNull { it.name == collectionName || it.code == collectionName }?.rarity
             ?: card.sets.firstOrNull()?.rarity,
-        collectionName = collectionName
+        collectionName = collectionName,
+        estimatedUnitValue = card.prices?.min?.takeIf { it.isFinite() && it >= 0 }
     ))
 }

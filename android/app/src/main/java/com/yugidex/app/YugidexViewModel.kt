@@ -49,6 +49,18 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
     val inventory = sortByName.flatMapLatest { if (it) dao.observeByName() else dao.observeByDate() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    init {
+        viewModelScope.launch {
+            inventory.filter { it.isNotEmpty() }.first()
+                .filter { it.estimatedUnitValue == null }
+                .forEach { card ->
+                    runCatching { repository.estimate(card) }.getOrNull()?.let { value ->
+                        dao.save(card.copy(estimatedUnitValue = value))
+                    }
+                }
+        }
+    }
+
     fun identify(detection: CardDetectionResult?, requireStability: Boolean, onFound: () -> Unit) {
         if (detection == null) {
             if (!requireStability) _state.update { it.copy(scannerStatus = "Não consegui ler. Tente aproximar ou usar busca manual.") }
@@ -114,7 +126,10 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
                 val remote = backend.inventory("Bearer ${auth.token}").cards
                 val remoteById = remote.associateBy { it.cardId }
                 val localWithHostedImages = inventory.value.map { local ->
-                    local.copy(imageUrl = remoteById[local.cardId]?.imageUrl ?: local.imageUrl)
+                    local.copy(
+                        imageUrl = remoteById[local.cardId]?.imageUrl ?: local.imageUrl,
+                        estimatedUnitValue = local.estimatedUnitValue ?: remoteById[local.cardId]?.estimatedUnitValue
+                    )
                 }
                 val merged = (remote + localWithHostedImages).associateBy { it.cardId }.values.toList()
                 if (merged.isNotEmpty()) dao.saveAll(merged)

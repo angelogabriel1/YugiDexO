@@ -20,11 +20,14 @@ create table if not exists public.cards (
   rarity text,
   collection_name text,
   quantity integer not null default 1 check (quantity between 1 and 999),
+  estimated_unit_value numeric(12, 2) check (estimated_unit_value is null or estimated_unit_value >= 0),
   saved_at timestamptz not null default now(),
   unique (user_id, card_id)
 );
 
 alter table public.cards add column if not exists collection_name text;
+alter table public.cards add column if not exists estimated_unit_value numeric(12, 2)
+  check (estimated_unit_value is null or estimated_unit_value >= 0);
 
 create index if not exists cards_user_saved_idx on public.cards(user_id, saved_at desc);
 create index if not exists cards_name_idx on public.cards using gin (to_tsvector('simple', name));
@@ -69,18 +72,18 @@ begin
   if jsonb_typeof(new_cards) <> 'array' then raise exception 'Inventario deve ser um array'; end if;
 
   delete from public.cards where user_id = auth.uid();
-  insert into public.cards(user_id, card_id, name, image_url, type, attribute, rarity, collection_name, quantity, saved_at)
+  insert into public.cards(user_id, card_id, name, image_url, type, attribute, rarity, collection_name, quantity, estimated_unit_value, saved_at)
   select auth.uid(), x.card_id, x.name, x.image_url, x.type, x.attribute, x.rarity, x.collection_name,
-         greatest(1, least(999, coalesce(x.quantity, 1))), coalesce(x.saved_at, now())
+         greatest(1, least(999, coalesce(x.quantity, 1))), x.estimated_unit_value, coalesce(x.saved_at, now())
   from jsonb_to_recordset(new_cards) as x(
     user_id uuid, card_id bigint, name text, image_url text, type text,
-    attribute text, rarity text, collection_name text, quantity integer, saved_at timestamptz
+    attribute text, rarity text, collection_name text, quantity integer, estimated_unit_value numeric, saved_at timestamptz
   )
   where x.card_id > 0 and length(x.name) between 1 and 200
   on conflict (user_id, card_id) do update set
     name = excluded.name, image_url = excluded.image_url, type = excluded.type,
     attribute = excluded.attribute, rarity = excluded.rarity, collection_name = excluded.collection_name,
-    quantity = excluded.quantity, saved_at = excluded.saved_at;
+    quantity = excluded.quantity, estimated_unit_value = excluded.estimated_unit_value, saved_at = excluded.saved_at;
   get diagnostics inserted_count = row_count;
   return inserted_count;
 end;
@@ -93,7 +96,7 @@ grant select, insert, update, delete on public.cards to authenticated;
 
 create or replace view public.cards_public with (security_invoker = false) as
 select p.username, c.card_id, c.name, c.image_url, c.type, c.attribute,
-       c.rarity, c.quantity, c.saved_at, c.collection_name
+       c.rarity, c.quantity, c.saved_at, c.collection_name, c.estimated_unit_value
 from public.cards c join public.profiles p on p.id = c.user_id;
 
 revoke all on public.cards_public from anon, authenticated;
