@@ -9,6 +9,8 @@ const requestedUsername = `novo_${crypto.randomBytes(4).toString('hex')}`;
 const password = `${crypto.randomBytes(18).toString('base64url')}Aa1!`;
 let userId;
 let server;
+const baseUrlArgument = process.argv.find(argument => argument.startsWith('--base-url='));
+const remoteBaseUrl = (process.env.SMOKE_BASE_URL || baseUrlArgument?.slice('--base-url='.length))?.replace(/\/$/, '');
 
 async function request(baseUrl, path, options = {}) {
   const response = await fetch(`${baseUrl}${path}`, options);
@@ -27,12 +29,14 @@ try {
     quantity: 1,
     saved_at: new Date().toISOString()
   }])]);
-  server = app.listen(0, '127.0.0.1');
-  await new Promise((resolve, reject) => {
-    server.once('listening', resolve);
-    server.once('error', reject);
-  });
-  const baseUrl = `http://127.0.0.1:${server.address().port}`;
+  if (!remoteBaseUrl) {
+    server = app.listen(0, '127.0.0.1');
+    await new Promise((resolve, reject) => {
+      server.once('listening', resolve);
+      server.once('error', reject);
+    });
+  }
+  const baseUrl = remoteBaseUrl || `http://127.0.0.1:${server.address().port}`;
   const register = await request(baseUrl, '/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -77,6 +81,7 @@ try {
   });
   if (afterLogout.status !== 401) throw new Error('O logout nao invalidou a sessao');
   console.log('Smoke test OK', {
+    target: remoteBaseUrl ? 'production' : 'local',
     registered: true,
     authenticated: true,
     synced: 1,
