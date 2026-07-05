@@ -21,8 +21,16 @@ app.use('/api/auth', rateLimit({ windowMs: 15 * 60_000, limit: 30 }), authRouter
 app.use('/api/cards', cardsRouter);
 app.use('/api', publicRouter);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-app.use(express.static(join(root, '../public'), { maxAge: '1h' }));
-app.get('/colecao/:username', (req, res) => res.sendFile(join(root, '../public/index.html')));
+app.use(express.static(join(root, '../public'), {
+  maxAge: '1h',
+  setHeaders: (res, filePath) => {
+    if (/\.(?:css|html|js)$/i.test(filePath)) res.set('Cache-Control', 'no-cache');
+  }
+}));
+app.get('/colecao/:username', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(join(root, '../public/index.html'));
+});
 app.use('/api', notFound);
 app.get('*splat', (req, res) => res.redirect('/colecao/duelista'));
 app.use(errorHandler);

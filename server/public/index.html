@@ -7,7 +7,7 @@
   <title>Yugidex — Colecao do Duelista</title>
   <meta name="description" content="Colecao publica Yugidex">
   <link rel="preconnect" href="https://images.ygoprodeck.com">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=20260705-2">
 </head>
 <body>
   <div class="cosmos" aria-hidden="true"><div class="stars"></div><div class="sparkles"></div></div>
@@ -32,6 +32,14 @@
         <strong id="estimatedValue">R$ 0,00</strong>
         <small id="estimatedValueCoverage"></small>
       </div>
+      <form id="profileSearch" class="profile-search" role="search" aria-label="Pesquisar perfil de duelista">
+        <label>
+          <span aria-hidden="true">@</span>
+          <input id="profileUsername" name="username" type="search" placeholder="Pesquisar perfil..." autocomplete="off" maxlength="31" required>
+        </label>
+        <button id="profileSearchButton" type="submit">Pesquisar perfil</button>
+      </form>
+      <p id="profileSearchError" class="profile-search-error" role="status" hidden></p>
     </header>
 
     <section class="toolbar" aria-label="Filtros da colecao">
@@ -75,6 +83,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="/app.js"></script>
+  <script type="module" src="/app.js?v=20260705-2"></script>
 </body>
 </html>

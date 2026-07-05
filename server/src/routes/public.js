@@ -8,6 +8,17 @@ import { cardImageUrl } from '../lib/cardImages.js';
 export const publicRouter = Router();
 const username = z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/);
 
+publicRouter.get('/profiles/:username', async (req, res) => {
+  const handle = username.parse(req.params.username).toLowerCase();
+  const profile = (await pool.query(
+    'select username, created_at from profiles where lower(username) = lower($1)',
+    [handle]
+  )).rows[0];
+  if (!profile) return res.status(404).json({ error: 'Duelista nao encontrado' });
+  res.set('Cache-Control', 'no-store');
+  res.json({ username: profile.username, createdAt: profile.created_at, publicUrl: `/colecao/${profile.username}` });
+});
+
 publicRouter.get('/collections/:username', async (req, res) => {
   const handle = username.parse(req.params.username).toLowerCase();
   const profileResult = await pool.query('select id, username, created_at from profiles where lower(username) = lower($1)', [handle]);

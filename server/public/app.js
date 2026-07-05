@@ -3,6 +3,8 @@ const $ = selector => document.querySelector(selector);
 const elements = {
   loader: $('#loader'), app: $('#app'), username: $('#username'), summary: $('#summary'),
   estimatedValue: $('#estimatedValue'), estimatedValueCoverage: $('#estimatedValueCoverage'),
+  profileSearch: $('#profileSearch'), profileUsername: $('#profileUsername'),
+  profileSearchButton: $('#profileSearchButton'), profileSearchError: $('#profileSearchError'),
   grid: $('#grid'), empty: $('#empty'), search: $('#search'), rarity: $('#rarity'),
   modal: $('#detailsModal'), modalBody: $('#modalBody'), toast: $('#toast'),
   summonButton: $('#summonButton'), summoning: $('#summoning'), exodiaImage: $('#exodiaImage'),
@@ -146,6 +148,32 @@ function showToast(message) {
   clearTimeout(showToast.timer); showToast.timer = setTimeout(() => elements.toast.classList.remove('show'), 3600);
 }
 
+async function searchProfile(event) {
+  event.preventDefault();
+  const username = elements.profileUsername.value.trim().replace(/^@+/, '');
+  elements.profileSearchError.hidden = true;
+  if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+    elements.profileSearchError.textContent = 'Digite um username valido com 3 a 30 letras, numeros ou _.';
+    elements.profileSearchError.hidden = false;
+    return;
+  }
+
+  elements.profileSearchButton.disabled = true;
+  elements.profileSearchButton.textContent = 'Buscando...';
+  try {
+    const response = await fetch(`/api/profiles/${encodeURIComponent(username)}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(response.status === 404 ? 'Duelista nao encontrado.' : 'Nao foi possivel pesquisar agora.');
+    const profile = await response.json();
+    location.assign(profile.publicUrl);
+  } catch (error) {
+    elements.profileSearchError.textContent = error.message;
+    elements.profileSearchError.hidden = false;
+  } finally {
+    elements.profileSearchButton.disabled = false;
+    elements.profileSearchButton.textContent = 'Pesquisar perfil';
+  }
+}
+
 function connectLive() {
   const stream = new EventSource(`/api/colecao-stream/${encodeURIComponent(state.username)}`);
   stream.onmessage = () => loadCollection({ live: true }).catch(() => showToast('Sincronizacao recebida; tentando novamente...'));
@@ -153,6 +181,7 @@ function connectLive() {
 
 elements.search.addEventListener('input', render);
 elements.rarity.addEventListener('change', render);
+elements.profileSearch.addEventListener('submit', searchProfile);
 elements.grid.addEventListener('click', event => event.target.closest('.card') && revealCard(event.target.closest('.card').dataset.id));
 elements.grid.addEventListener('keydown', event => { if (['Enter', ' '].includes(event.key) && event.target.closest('.card')) revealCard(event.target.closest('.card').dataset.id); });
 elements.modal.addEventListener('click', event => { if (event.target.matches('[data-close]') || event.target === elements.modal) elements.modal.close(); });
