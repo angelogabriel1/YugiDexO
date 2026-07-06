@@ -16,4 +16,6 @@ interface YugidexApi {
     @GET("api/cards") suspend fun inventory(@Header("Authorization") bearer: String): InventoryResponse
     @POST("api/cards/sync") suspend fun sync(@Header("Authorization") bearer: String, @Body body: SyncBody): SyncResponse
     @GET("api/card-details") suspend fun details(@Query("id") id: Long, @Query("name") name: String): Card
+    @GET("api/decks") suspend fun decks(@Header("Authorization") bearer: String): DecksResponse
+    @POST("api/decks/sync") suspend fun syncDecks(@Header("Authorization") bearer: String, @Body body: DeckSyncBody): DeckSyncResponse
 }

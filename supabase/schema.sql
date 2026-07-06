@@ -32,8 +32,36 @@ alter table public.cards add column if not exists estimated_unit_value numeric(1
 create index if not exists cards_user_saved_idx on public.cards(user_id, saved_at desc);
 create index if not exists cards_name_idx on public.cards using gin (to_tsvector('simple', name));
 
+create table if not exists public.decks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, id)
+);
+
+create table if not exists public.deck_cards (
+  deck_id uuid not null references public.decks(id) on delete cascade,
+  card_id bigint not null check (card_id > 0),
+  name text not null check (length(name) between 1 and 200),
+  image_url text,
+  type text,
+  attribute text,
+  rarity text,
+  status text not null check (status in ('owned', 'missing')),
+  quantity integer not null default 1 check (quantity between 1 and 999),
+  added_at timestamptz not null default now(),
+  primary key (deck_id, card_id)
+);
+
+create index if not exists decks_user_updated_idx on public.decks(user_id, updated_at desc);
+create index if not exists deck_cards_card_idx on public.deck_cards(card_id);
+
 alter table public.profiles enable row level security;
 alter table public.cards enable row level security;
+alter table public.decks enable row level security;
+alter table public.deck_cards enable row level security;
 
 drop policy if exists "profile readable by owner" on public.profiles;
 create policy "profile readable by owner" on public.profiles for select using (auth.uid() = id);
@@ -46,6 +74,15 @@ drop policy if exists "cards updated by owner" on public.cards;
 create policy "cards updated by owner" on public.cards for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "cards deleted by owner" on public.cards;
 create policy "cards deleted by owner" on public.cards for delete using (auth.uid() = user_id);
+
+drop policy if exists "decks managed by owner" on public.decks;
+create policy "decks managed by owner" on public.decks for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "deck cards managed by owner" on public.deck_cards;
+create policy "deck cards managed by owner" on public.deck_cards for all
+  using (exists (select 1 from public.decks d where d.id = deck_id and d.user_id = auth.uid()))
+  with check (exists (select 1 from public.decks d where d.id = deck_id and d.user_id = auth.uid()));
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
@@ -93,6 +130,7 @@ revoke all on function public.replace_inventory(jsonb) from public;
 grant execute on function public.replace_inventory(jsonb) to authenticated;
 grant select on public.profiles to authenticated;
 grant select, insert, update, delete on public.cards to authenticated;
+grant select, insert, update, delete on public.decks, public.deck_cards to authenticated;
 
 create or replace view public.cards_public with (security_invoker = false) as
 select p.username, c.card_id, c.name, c.image_url, c.type, c.attribute,

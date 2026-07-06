@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import java.time.Instant
+import java.util.UUID
 
 data class UiState(
     val selected: Card? = null,
@@ -19,6 +21,8 @@ data class UiState(
     val token: String? = null,
     val username: String? = null,
     val syncing: Boolean = false,
+    val deckSearchResults: List<Card> = emptyList(),
+    val searchingDeckCards: Boolean = false,
     val scannerStatus: String = "Lendo carta..."
 )
 
@@ -36,6 +40,7 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
     private val container = (application as YugidexApplication).container
     private val repository = container.repository
     private val dao = container.database.inventory()
+    private val deckDao = container.database.decks()
     private val backend = container.backend
     private val prefs = application.getSharedPreferences("session", 0)
     private val sortByName = MutableStateFlow(false)
@@ -47,6 +52,8 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
     private var lastLookupAt = 0L
     val state = _state.asStateFlow()
     val inventory = sortByName.flatMapLatest { if (it) dao.observeByName() else dao.observeByDate() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val decks = deckDao.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
@@ -118,6 +125,62 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
     fun toggleSort() { sortByName.value = !sortByName.value }
     fun clearMessage() = _state.update { it.copy(message = null) }
 
+    fun prepareDeckEditor() = _state.update {
+        it.copy(deckSearchResults = emptyList(), searchingDeckCards = false, message = null)
+    }
+
+    fun searchDeckCards(query: String) {
+        if (query.trim().length < 2) {
+            _state.update { it.copy(deckSearchResults = emptyList(), message = "Digite ao menos 2 caracteres para buscar.") }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(searchingDeckCards = true, message = null) }
+            runCatching { repository.search(query.trim()).take(30) }
+                .onSuccess { cards ->
+                    _state.update {
+                        it.copy(
+                            deckSearchResults = cards,
+                            searchingDeckCards = false,
+                            message = if (cards.isEmpty()) "Nenhuma carta encontrada." else null
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(searchingDeckCards = false, message = error.userMessage("buscar cartas")) }
+                }
+        }
+    }
+
+    fun saveDeck(deckId: String?, name: String, cards: List<DeckCardPayload>) = viewModelScope.launch {
+        val cleanName = name.trim()
+        if (cleanName.isEmpty()) {
+            _state.update { it.copy(message = "Dê um nome ao deck antes de salvar.") }
+            return@launch
+        }
+        val id = deckId ?: UUID.randomUUID().toString()
+        val existing = decks.value.firstOrNull { it.deck.id == id }?.deck
+        val now = Instant.now().toString()
+        deckDao.save(
+            DeckEntity(id, cleanName.take(80), existing?.createdAt ?: now, now),
+            normalizeDeckCards(cards, inventory.value.mapTo(mutableSetOf()) { it.cardId }).map { card ->
+                DeckCardEntity(
+                    deckId = id, cardId = card.cardId, name = card.name,
+                    imageUrl = card.imageUrl, type = card.type, attribute = card.attribute,
+                    rarity = card.rarity, status = card.status, quantity = card.quantity
+                )
+            }
+        )
+        _state.update { it.copy(message = "Deck salvo com sucesso.") }
+        syncDecksIfAuthenticated("Deck salvo neste aparelho, mas ainda não foi sincronizado.")
+    }
+
+    fun deleteDeck(deckId: String) = viewModelScope.launch {
+        deckDao.deleteDeck(deckId)
+        _state.update { it.copy(message = "Deck excluído.") }
+        syncDecksIfAuthenticated("Deck excluído neste aparelho, mas a nuvem ainda não foi atualizada.")
+    }
+
     fun authenticate(email: String, password: String, username: String?, register: Boolean) = viewModelScope.launch {
         _state.update { it.copy(syncing = true, message = null) }
         runCatching {
@@ -133,6 +196,11 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
                 }
                 val merged = (remote + localWithHostedImages).associateBy { it.cardId }.values.toList()
                 if (merged.isNotEmpty()) dao.saveAll(merged)
+                val remoteDecks = runCatching { backend.decks("Bearer ${auth.token}").decks }.getOrDefault(emptyList())
+                val localDecks = deckDao.getAll().map(DeckWithCards::toPayload)
+                val mergedDecks = (remoteDecks + localDecks).associateBy { it.id }.values
+                mergedDecks.forEach { deckDao.savePayload(it) }
+                runCatching { backend.syncDecks("Bearer ${auth.token}", DeckSyncBody(mergedDecks.toList())) }
                 remote.size
             } else 0
             auth to loadedCards
@@ -153,8 +221,14 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
     fun sync() = viewModelScope.launch {
         val token = _state.value.token ?: return@launch
         _state.update { it.copy(syncing = true, message = null) }
-        runCatching { backend.sync("Bearer $token", SyncBody(inventory.value)) }
-            .onSuccess { result -> _state.update { it.copy(syncing = false, message = "${result.synced} cartas sincronizadas") } }
+        runCatching {
+            val result = backend.sync("Bearer $token", SyncBody(inventory.value))
+            val deckResult = backend.syncDecks("Bearer $token", DeckSyncBody(deckDao.getAll().map(DeckWithCards::toPayload)))
+            result to deckResult
+        }
+            .onSuccess { (result, deckResult) ->
+                _state.update { it.copy(syncing = false, message = "${result.synced} cartas e ${deckResult.synced} decks sincronizados") }
+            }
             .onFailure { error ->
                 if (error is HttpException && error.code() == 401) {
                     clearAuthSession()
@@ -187,9 +261,49 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
         prefs.edit().remove("token").remove("refresh_token").remove("username").apply()
     }
 
+    private suspend fun syncDecksIfAuthenticated(failureMessage: String) {
+        val token = _state.value.token ?: return
+        runCatching {
+            backend.syncDecks("Bearer $token", DeckSyncBody(deckDao.getAll().map(DeckWithCards::toPayload)))
+        }.onFailure { _state.update { state -> state.copy(message = failureMessage) } }
+    }
+
     private companion object {
         const val REQUIRED_STABLE_FRAMES = 2
         const val STABILITY_WINDOW_MS = 2_500L
         const val LOOKUP_DEBOUNCE_MS = 4_000L
     }
+}
+
+private fun DeckWithCards.toPayload() = DeckPayload(
+    id = deck.id,
+    name = deck.name,
+    createdAt = deck.createdAt,
+    updatedAt = deck.updatedAt,
+    cards = cards.map { card ->
+        DeckCardPayload(
+            cardId = card.cardId, name = card.name, imageUrl = card.imageUrl,
+            type = card.type, attribute = card.attribute, rarity = card.rarity,
+            status = card.status, quantity = card.quantity
+        )
+    }
+)
+
+private suspend fun DeckDao.savePayload(payload: DeckPayload) {
+    val now = Instant.now().toString()
+    save(
+        DeckEntity(
+            id = payload.id,
+            name = payload.name,
+            createdAt = payload.createdAt ?: now,
+            updatedAt = payload.updatedAt ?: now
+        ),
+        payload.cards.map { card ->
+            DeckCardEntity(
+                deckId = payload.id, cardId = card.cardId, name = card.name,
+                imageUrl = card.imageUrl, type = card.type, attribute = card.attribute,
+                rarity = card.rarity, status = card.status, quantity = card.quantity
+            )
+        }
+    )
 }

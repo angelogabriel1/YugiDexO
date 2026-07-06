@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { config } from './config.js';
 import { authRouter } from './routes/auth.js';
 import { cardsRouter } from './routes/cards.js';
+import { decksRouter } from './routes/decks.js';
 import { publicRouter } from './routes/public.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
@@ -14,11 +15,12 @@ const root = dirname(fileURLToPath(import.meta.url));
 export const app = express();
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: config.PUBLIC_ORIGIN, methods: ['GET', 'POST'] }));
+app.use(cors({ origin: config.PUBLIC_ORIGIN, methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
 app.use(express.json({ limit: '2mb' }));
 app.use('/api', rateLimit({ windowMs: 60_000, limit: 180, standardHeaders: 'draft-7', legacyHeaders: false }));
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60_000, limit: 30 }), authRouter);
 app.use('/api/cards', cardsRouter);
+app.use('/api/decks', decksRouter);
 app.use('/api', publicRouter);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use(express.static(join(root, '../public'), {

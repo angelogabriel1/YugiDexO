@@ -43,6 +43,8 @@ class CardRepository(private val ygo: YgoApi, private val backend: YugidexApi, p
     suspend fun estimate(card: InventoryCard): Double? =
         backend.details(card.cardId, card.name).prices?.min?.takeIf { it.isFinite() && it >= 0 }
 
+    suspend fun search(name: String): List<Card> = ygo.fuzzy(name).data
+
     suspend fun save(card: Card, collectionName: String?) = dao.save(InventoryCard(
         cardId = card.id, name = card.localized?.name ?: card.name, imageUrl = card.images.firstOrNull()?.url,
         type = card.type, attribute = card.attribute,

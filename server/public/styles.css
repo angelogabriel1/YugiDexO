@@ -45,6 +45,28 @@ h1 span { color: var(--pharaoh-gold); text-shadow: 0 0 25px rgba(255,213,79,.25)
 .search input { width: 100%; border: 0; outline: 0; padding: 13px 0; color: white; background: transparent; }
 select, .summon-button { min-height: 48px; padding: 0 18px; border: 1px solid rgba(255,213,79,.28); border-radius: 12px; color: white; background: var(--card-violet); }
 .summon-button { color: #171004; font-weight: 800; background: linear-gradient(135deg, var(--gold-glow), var(--mystic-gold)); box-shadow: 0 0 25px rgba(255,213,79,.24); }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 54px 0 22px; }
+.section-heading .eyebrow { margin-bottom: 6px; }
+.section-heading h2 { margin: 0; color: var(--pharaoh-gold); font: 500 clamp(1.8rem, 5vw, 2.7rem)/1 Georgia, serif; }
+.section-count { color: var(--text-gray); }
+.decks-grid { display: grid; gap: 14px; }
+.deck-panel { border: 1px solid rgba(255,213,79,.24); border-radius: 16px; background: linear-gradient(145deg, rgba(48,27,82,.86), rgba(13,8,25,.92)); overflow: hidden; }
+.deck-panel summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 20px; cursor: pointer; list-style-position: inside; }
+.deck-panel summary > span:first-of-type { display: inline-grid; gap: 4px; margin-left: 6px; }
+.deck-panel summary strong { color: var(--pharaoh-gold); font: 600 1.2rem Georgia, serif; }
+.deck-panel summary small, .deck-card small { color: var(--text-gray); }
+.deck-summary-status { display: flex; flex-wrap: wrap; justify-content: end; gap: 8px; }
+.deck-summary-status b, .deck-status { padding: 5px 9px; border-radius: 999px; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+.deck-summary-status .owned, .status-owned .deck-status { color: #181204; background: var(--pharaoh-gold); }
+.deck-summary-status .missing, .status-missing .deck-status { color: #ffd2d2; background: rgba(190,45,65,.35); }
+.deck-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; padding: 0 18px 18px; }
+.deck-card { display: grid; grid-template-columns: 56px 1fr; gap: 11px; min-width: 0; padding: 9px; border: 1px solid rgba(255,255,255,.08); border-radius: 11px; background: rgba(255,255,255,.035); }
+.deck-card.status-owned { border-color: rgba(255,213,79,.28); }
+.deck-card.status-missing { border-color: rgba(255,100,120,.28); }
+.deck-card img { width: 56px; aspect-ratio: 421/614; object-fit: cover; border-radius: 5px; }
+.deck-card > div { display: grid; align-content: center; justify-items: start; gap: 4px; min-width: 0; }
+.deck-card strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deck-empty { color: var(--text-gray); }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: clamp(18px, 3vw, 32px); perspective: 1200px; }
 .card { position: relative; padding: 9px 9px 15px; border: 1px solid rgba(255,213,79,.25); border-radius: 14px; background: linear-gradient(150deg, rgba(65,39,105,.76), rgba(16,10,30,.92)); box-shadow: 0 16px 35px rgba(0,0,0,.4); transition: transform .25s ease, border-color .25s, box-shadow .25s; transform-style: preserve-3d; overflow: hidden; cursor: pointer; }
 .card::after { content: ''; position: absolute; inset: -70% -100%; background: linear-gradient(110deg, transparent 40%, rgba(255,255,255,.24) 50%, transparent 60%); transform: translateX(-35%); transition: transform .65s; pointer-events: none; }
@@ -146,6 +168,9 @@ select, .summon-button { min-height: 48px; padding: 0 18px; border: 1px solid rg
   .app { width: min(100% - 20px, 1220px); padding-top: 30px; }
   .toolbar { grid-template-columns: 1fr 1fr; }
   .profile-search { width: 100%; grid-template-columns: 1fr; }
+  .deck-panel summary { align-items: flex-start; flex-direction: column; }
+  .deck-summary-status { justify-content: start; margin-left: 18px; }
+  .deck-card-grid { grid-template-columns: 1fr; padding: 0 12px 12px; }
   .search { grid-column: 1 / -1; }
   .summon-button { grid-column: 1 / -1; }
   .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }

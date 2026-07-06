@@ -4,13 +4,14 @@ import { pool } from '../src/db.js';
 
 const suffix = `${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
 const email = `yugidex-smoke-${suffix}@example.com`;
-const username = `smoke_${crypto.randomBytes(4).toString('hex')}`;
+const username = process.env.SMOKE_USERNAME || `smoke_${crypto.randomBytes(4).toString('hex')}`;
 const requestedUsername = `novo_${crypto.randomBytes(4).toString('hex')}`;
 const password = `${crypto.randomBytes(18).toString('base64url')}Aa1!`;
 let userId;
 let server;
 const baseUrlArgument = process.argv.find(argument => argument.startsWith('--base-url='));
 const remoteBaseUrl = (process.env.SMOKE_BASE_URL || baseUrlArgument?.slice('--base-url='.length))?.replace(/\/$/, '');
+const holdMs = Math.max(0, Number(process.env.SMOKE_HOLD_MS || 0));
 
 async function request(baseUrl, path, options = {}) {
   const response = await fetch(`${baseUrl}${path}`, options);
@@ -65,12 +66,35 @@ try {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${register.token}` },
     body: JSON.stringify({ cards: [{ cardId: 89631139, name: 'Blue-Eyes White Dragon', quantity: 1 }] })
   });
+  const deckId = crypto.randomUUID();
+  const deckSync = await request(baseUrl, '/api/decks/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${register.token}` },
+    body: JSON.stringify({ decks: [{
+      id: deckId,
+      name: 'Deck Smoke',
+      cards: [
+        { cardId: 89631139, name: 'Blue-Eyes White Dragon', status: 'owned', quantity: 1 },
+        { cardId: 46986414, name: 'Dark Magician', status: 'missing', quantity: 1 }
+      ]
+    }] })
+  });
   const collection = await request(baseUrl, `/api/collections/${username}`);
   const inventory = await request(baseUrl, '/api/cards', {
     headers: { Authorization: `Bearer ${register.token}` }
   });
-  if (sync.synced !== 1 || collection.cards?.length !== 1 || inventory.cards?.length !== 1) {
-    throw new Error('A sincronizacao de teste nao retornou uma carta');
+  const decks = await request(baseUrl, '/api/decks', {
+    headers: { Authorization: `Bearer ${register.token}` }
+  });
+  const deckStatuses = decks.decks?.[0]?.cards?.map(card => card.status).sort();
+  if (sync.synced !== 1 || deckSync.synced !== 1 || collection.cards?.length !== 1 ||
+      collection.decks?.length !== 1 || inventory.cards?.length !== 1 ||
+      decks.decks?.length !== 1 || JSON.stringify(deckStatuses) !== JSON.stringify(['missing', 'owned'])) {
+    throw new Error('A sincronizacao de cartas e decks nao retornou o resultado esperado');
+  }
+  if (holdMs > 0) {
+    console.log(`Visual smoke ready: ${baseUrl}/colecao/${username} (${holdMs}ms)`);
+    await new Promise(resolve => setTimeout(resolve, holdMs));
   }
   await request(baseUrl, '/api/auth/logout', {
     method: 'POST',
@@ -85,8 +109,10 @@ try {
     registered: true,
     authenticated: true,
     synced: 1,
+    decksSynced: 1,
     inventoryDownloaded: true,
     publicCollection: true,
+    publicDecks: true,
     logoutInvalidatedSession: true
   });
 } finally {

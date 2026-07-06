@@ -1,10 +1,11 @@
-const state = { cards: [], visible: [], username: location.pathname.split('/').filter(Boolean).at(-1) || '' };
+const state = { cards: [], decks: [], visible: [], username: location.pathname.split('/').filter(Boolean).at(-1) || '' };
 const $ = selector => document.querySelector(selector);
 const elements = {
   loader: $('#loader'), app: $('#app'), username: $('#username'), summary: $('#summary'),
   estimatedValue: $('#estimatedValue'), estimatedValueCoverage: $('#estimatedValueCoverage'),
   profileSearch: $('#profileSearch'), profileUsername: $('#profileUsername'),
   profileSearchButton: $('#profileSearchButton'), profileSearchError: $('#profileSearchError'),
+  decksSection: $('#decksSection'), decksGrid: $('#decksGrid'), deckCount: $('#deckCount'),
   grid: $('#grid'), empty: $('#empty'), search: $('#search'), rarity: $('#rarity'),
   modal: $('#detailsModal'), modalBody: $('#modalBody'), toast: $('#toast'),
   summonButton: $('#summonButton'), summoning: $('#summoning'), exodiaImage: $('#exodiaImage'),
@@ -14,6 +15,7 @@ const elements = {
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
 const imageFor = card => card.image_url || `https://images.ygoprodeck.com/images/cards/${card.card_id}.jpg`;
+const deckImageFor = card => card.imageUrl || `https://images.ygoprodeck.com/images/cards/${card.cardId}.jpg`;
 const formatMoney = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 const normalized = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
@@ -97,11 +99,35 @@ function configureFilters() {
   elements.rarity.innerHTML = '<option value="">Todas as raridades</option>' + rarities.map(value => `<option>${escapeHtml(value)}</option>`).join('');
 }
 
+function renderDecks() {
+  elements.decksSection.hidden = state.decks.length === 0;
+  elements.deckCount.textContent = `${state.decks.length} deck${state.decks.length === 1 ? '' : 's'}`;
+  elements.decksGrid.innerHTML = state.decks.map(deck => {
+    const owned = deck.cards.filter(card => card.status === 'owned').reduce((sum, card) => sum + card.quantity, 0);
+    const missing = deck.cards.filter(card => card.status === 'missing').reduce((sum, card) => sum + card.quantity, 0);
+    return `<details class="deck-panel">
+      <summary>
+        <span><strong>${escapeHtml(deck.name)}</strong><small>${deck.cards.length} carta${deck.cards.length === 1 ? '' : 's'} unica${deck.cards.length === 1 ? '' : 's'}</small></span>
+        <span class="deck-summary-status"><b class="owned">${owned} na colecao</b><b class="missing">${missing} faltando</b></span>
+      </summary>
+      <div class="deck-card-grid">
+        ${deck.cards.map(card => `<article class="deck-card status-${card.status}">
+          <img src="${escapeHtml(deckImageFor(card))}" alt="${escapeHtml(card.name)}" loading="lazy">
+          <div><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml(card.rarity || card.attribute || card.type || 'Carta')}</small>
+            <span class="deck-status">${card.status === 'owned' ? 'Na Colecao' : 'Faltando'}${card.quantity > 1 ? ` x${card.quantity}` : ''}</span>
+          </div>
+        </article>`).join('') || '<p class="deck-empty">Este deck ainda nao possui cartas.</p>'}
+      </div>
+    </details>`;
+  }).join('');
+}
+
 async function loadCollection({ live = false } = {}) {
   const response = await fetch(`/api/collections/${encodeURIComponent(state.username)}`, { cache: live ? 'no-store' : 'default' });
   if (!response.ok) throw new Error(response.status === 404 ? 'Duelista nao encontrado' : 'Nao foi possivel abrir a colecao');
   const payload = await response.json();
   state.cards = payload.cards;
+  state.decks = payload.decks || [];
   elements.username.textContent = payload.profile.username;
   const total = state.cards.reduce((sum, card) => sum + card.quantity, 0);
   const priced = state.cards.reduce((sum, card) => card.estimated_unit_value == null ? sum : sum + card.quantity, 0);
@@ -114,7 +140,7 @@ async function loadCollection({ live = false } = {}) {
   elements.estimatedValueCoverage.textContent = priced < total
     ? `${priced} de ${total} cartas com cotacao disponivel`
     : 'Estimativa baseada nas cotacoes disponiveis';
-  configureFilters(); render();
+  configureFilters(); render(); renderDecks();
   elements.summonButton.hidden = !hasExodia(state.cards);
   document.title = `Colecao de ${payload.profile.username} — Yugidex`;
   if (live) showToast('Colecao sincronizada com sucesso!');

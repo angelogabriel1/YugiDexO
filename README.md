@@ -8,6 +8,11 @@ Ecossistema para escanear, organizar e compartilhar colecoes de Yu-Gi-Oh!:
 - Cloudflare R2: armazenamento opcional das artes das cartas.
 - Railway: hospedagem do backend e do portal.
 
+O app tambem permite criar decks personalizados, combinar cartas que ja estao no
+inventario com cartas marcadas como faltantes e sincronizar esses decks na conta.
+Os decks tambem aparecem no perfil publico compartilhado, com os dois estados
+visualmente diferenciados.
+
 O inventario mostra um valor aproximado em reais, calculado pela menor cotacao
 disponivel de cada carta multiplicada pela quantidade. Quando alguma carta ainda
 nao possui cotacao, web e app exibem a cobertura usada no total. No Android, o
@@ -89,6 +94,11 @@ HTTPS como `API_BASE_URL`.
 - `POST /api/auth/logout`
 - `GET /api/cards` (Bearer token)
 - `POST /api/cards/sync` (Bearer token)
+- `GET /api/decks` (Bearer token)
+- `POST /api/decks` (Bearer token)
+- `PUT /api/decks/:id` (Bearer token)
+- `DELETE /api/decks/:id` (Bearer token)
+- `POST /api/decks/sync` (Bearer token)
 - `GET /api/collections/:username`
 - `GET /api/card-details?id=<id>&name=<name>`
 - `GET /api/colecao-stream/:username`

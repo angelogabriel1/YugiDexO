@@ -16,8 +16,8 @@ android {
         applicationId = "com.yugidex.app"
         minSdk = 23
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
         buildConfigField("String", "API_BASE_URL", "\"${project.findProperty("API_BASE_URL") ?: "http://10.0.2.2:3000/"}\"")
         manifestPlaceholders["usesCleartext"] = "false"
     }

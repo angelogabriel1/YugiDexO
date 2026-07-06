@@ -1,6 +1,8 @@
 package com.yugidex.app.data
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 
@@ -46,3 +48,63 @@ data class AuthResponse(val token: String?, val refreshToken: String? = null, va
 data class InventoryResponse(val cards: List<InventoryCard>)
 data class SyncBody(val cards: List<InventoryCard>)
 data class SyncResponse(val synced: Int, val username: String, val publicUrl: String)
+
+@Entity(tableName = "decks")
+data class DeckEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val createdAt: String = java.time.Instant.now().toString(),
+    val updatedAt: String = java.time.Instant.now().toString()
+)
+
+@Entity(
+    tableName = "deck_cards",
+    primaryKeys = ["deckId", "cardId"],
+    foreignKeys = [ForeignKey(
+        entity = DeckEntity::class,
+        parentColumns = ["id"],
+        childColumns = ["deckId"],
+        onDelete = ForeignKey.CASCADE
+    )],
+    indices = [Index("deckId")]
+)
+data class DeckCardEntity(
+    val deckId: String,
+    val cardId: Long,
+    val name: String,
+    val imageUrl: String?,
+    val type: String?,
+    val attribute: String?,
+    val rarity: String?,
+    val status: String,
+    val quantity: Int = 1
+)
+
+data class DeckWithCards(
+    @androidx.room.Embedded val deck: DeckEntity,
+    @androidx.room.Relation(parentColumn = "id", entityColumn = "deckId")
+    val cards: List<DeckCardEntity>
+)
+
+data class DeckCardPayload(
+    val cardId: Long,
+    val name: String,
+    val imageUrl: String?,
+    val type: String?,
+    val attribute: String?,
+    val rarity: String?,
+    val status: String,
+    val quantity: Int = 1
+)
+
+data class DeckPayload(
+    val id: String,
+    val name: String,
+    val cards: List<DeckCardPayload>,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
+)
+
+data class DecksResponse(val decks: List<DeckPayload>)
+data class DeckSyncBody(val decks: List<DeckPayload>)
+data class DeckSyncResponse(val synced: Int)

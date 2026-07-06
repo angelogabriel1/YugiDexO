@@ -15,9 +15,40 @@ interface InventoryDao {
     @Delete suspend fun delete(card: InventoryCard)
 }
 
-@Database(entities = [InventoryCard::class], version = 3, exportSchema = false)
+@Dao
+interface DeckDao {
+    @Transaction
+    @Query("SELECT * FROM decks ORDER BY updatedAt DESC")
+    fun observeAll(): Flow<List<DeckWithCards>>
+
+    @Transaction
+    @Query("SELECT * FROM decks ORDER BY updatedAt DESC")
+    suspend fun getAll(): List<DeckWithCards>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveDeck(deck: DeckEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveCards(cards: List<DeckCardEntity>)
+
+    @Query("DELETE FROM deck_cards WHERE deckId = :deckId")
+    suspend fun deleteCards(deckId: String)
+
+    @Query("DELETE FROM decks WHERE id = :deckId")
+    suspend fun deleteDeck(deckId: String)
+
+    @Transaction
+    suspend fun save(deck: DeckEntity, cards: List<DeckCardEntity>) {
+        saveDeck(deck)
+        deleteCards(deck.id)
+        if (cards.isNotEmpty()) saveCards(cards)
+    }
+}
+
+@Database(entities = [InventoryCard::class, DeckEntity::class, DeckCardEntity::class], version = 4, exportSchema = false)
 abstract class InventoryDatabase : RoomDatabase() {
     abstract fun inventory(): InventoryDao
+    abstract fun decks(): DeckDao
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -29,9 +60,37 @@ abstract class InventoryDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE inventory_cards ADD COLUMN estimatedUnitValue REAL")
             }
         }
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS decks (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        createdAt TEXT NOT NULL,
+                        updatedAt TEXT NOT NULL
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS deck_cards (
+                        deckId TEXT NOT NULL,
+                        cardId INTEGER NOT NULL,
+                        name TEXT NOT NULL,
+                        imageUrl TEXT,
+                        type TEXT,
+                        attribute TEXT,
+                        rarity TEXT,
+                        status TEXT NOT NULL,
+                        quantity INTEGER NOT NULL,
+                        PRIMARY KEY(deckId, cardId),
+                        FOREIGN KEY(deckId) REFERENCES decks(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_deck_cards_deckId ON deck_cards(deckId)")
+            }
+        }
 
         fun create(context: Context) = Room.databaseBuilder(context, InventoryDatabase::class.java, "ygo_inventory.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
     }
 }

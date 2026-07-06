@@ -40,6 +40,32 @@ alter table public.cards add column if not exists estimated_unit_value numeric(1
 create index if not exists cards_user_saved_idx on public.cards(user_id, saved_at desc);
 create index if not exists cards_name_idx on public.cards using gin (to_tsvector('simple', name));
 
+create table if not exists public.decks (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, id)
+);
+
+create table if not exists public.deck_cards (
+  deck_id uuid not null references public.decks(id) on delete cascade,
+  card_id bigint not null check (card_id > 0),
+  name text not null check (length(name) between 1 and 200),
+  image_url text,
+  type text,
+  attribute text,
+  rarity text,
+  status text not null check (status in ('owned', 'missing')),
+  quantity integer not null default 1 check (quantity between 1 and 999),
+  added_at timestamptz not null default now(),
+  primary key (deck_id, card_id)
+);
+
+create index if not exists decks_user_updated_idx on public.decks(user_id, updated_at desc);
+create index if not exists deck_cards_card_idx on public.deck_cards(card_id);
+
 create or replace view public.cards_public as
 select p.username, c.card_id, c.name, c.image_url, c.type, c.attribute,
        c.rarity, c.quantity, c.saved_at, c.collection_name, c.estimated_unit_value
