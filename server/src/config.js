@@ -26,6 +26,7 @@ const schema = z.object({
   }, z.string().url().optional()),
   SUPABASE_ANON_KEY: z.string().min(20).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+  AFFILIATE_CARD_LINKS_JSON: optionalText,
   AFFILIATE_CARD_URL_TEMPLATE: optionalText,
   AFFILIATE_LINK_LABEL: textWithDefault('Ver oferta da carta'),
   AFFILIATE_DISCLOSURE: textWithDefault('Link de afiliado: podemos receber comissão sem custo extra para você.'),

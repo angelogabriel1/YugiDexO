@@ -77,6 +77,7 @@ NEON_AUTH_URL
 PUBLIC_ORIGIN=https://SEU-APP.up.railway.app
 R2_PUBLIC_URL=https://cartas.seudominio.com
 BRL_USD_RATE=5.50
+AFFILIATE_CARD_LINKS_JSON={"46986414":"https://meli.la/2Z62nSs"}
 AFFILIATE_CARD_URL_TEMPLATE=https://sua-loja.example/busca?q={encodedName}&ref=SEU_CODIGO
 AFFILIATE_LINK_LABEL=Ver oferta da carta
 ```
@@ -85,11 +86,14 @@ As chaves de escrita do R2 nao sao necessarias no servidor em execucao; use-as
 somente ao rodar `r2:sync`. O Railway fornece `PORT` automaticamente e verifica
 `/api/health` antes de ativar uma nova versao.
 
-O template de afiliado e opcional. Quando `AFFILIATE_CARD_URL_TEMPLATE` estiver
-configurado, os detalhes das cartas no site e no app exibem um botao de oferta.
-Placeholders aceitos: `{cardId}`, `{id}`, `{card_id}`, `{name}`,
-`{encodedName}` e `{query}`. Todos sao escapados para uso seguro em URL.
-Voce tambem pode ajustar o aviso exibido com `AFFILIATE_DISCLOSURE`.
+Os links de afiliado sao opcionais. Para Mercado Livre, use
+`AFFILIATE_CARD_LINKS_JSON` para mapear cada carta ao link curto gerado no Portal
+do Afiliado, por `cardId` ou nome da carta, por exemplo
+`{"46986414":"https://meli.la/2Z62nSs"}`. Quando nao houver link especifico, o
+app pode cair no `AFFILIATE_CARD_URL_TEMPLATE`, se configurado. Placeholders
+aceitos no template: `{cardId}`, `{id}`, `{card_id}`, `{name}`, `{encodedName}`
+e `{query}`. Voce tambem pode ajustar o aviso exibido com
+`AFFILIATE_DISCLOSURE`.
 
 Depois de gerar o dominio do Railway, adicione essa URL como origem confiavel nas
 configuracoes do Neon Auth. Em seguida, gere o APK de producao usando a mesma URL

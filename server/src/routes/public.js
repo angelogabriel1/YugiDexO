@@ -68,6 +68,7 @@ publicRouter.get('/card-details', async (req, res) => {
   res.json({
     ...card,
     affiliate: buildAffiliateLink(card, {
+      links: config.AFFILIATE_CARD_LINKS_JSON,
       template: config.AFFILIATE_CARD_URL_TEMPLATE,
       label: config.AFFILIATE_LINK_LABEL,
       disclosure: config.AFFILIATE_DISCLOSURE
