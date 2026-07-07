@@ -7,7 +7,7 @@
   <title>Yugidex — Colecao do Duelista</title>
   <meta name="description" content="Colecao publica Yugidex">
   <link rel="preconnect" href="https://images.ygoprodeck.com">
-  <link rel="stylesheet" href="/styles.css?v=20260705-3">
+  <link rel="stylesheet" href="/styles.css?v=20260706-1">
 </head>
 <body>
   <div class="cosmos" aria-hidden="true"><div class="stars"></div><div class="sparkles"></div></div>
@@ -42,21 +42,27 @@
       <p id="profileSearchError" class="profile-search-error" role="status" hidden></p>
     </header>
 
-    <section class="toolbar" aria-label="Filtros da colecao">
+    <nav class="tabs" role="tablist" aria-label="Navegação da coleção">
+      <button id="collectionTab" class="tab is-active" type="button" role="tab" data-tab="collection" aria-selected="true">Coleção</button>
+      <button id="decksTab" class="tab" type="button" role="tab" data-tab="decks" aria-selected="false">Meus Decks</button>
+    </nav>
+
+    <section class="toolbar" aria-label="Filtros da colecao" data-panel="collection">
       <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar uma carta..." autocomplete="off"></label>
       <label class="select"><span class="sr-only">Filtrar por raridade</span><select id="rarity"><option value="">Todas as raridades</option></select></label>
       <button id="summonButton" class="summon-button" hidden>🔮 Invocar Exodia</button>
     </section>
 
-    <section id="decksSection" class="decks-section" hidden>
+    <section id="decksSection" class="decks-section" data-panel="decks" hidden>
       <header class="section-heading">
-        <div><p class="eyebrow">ESTRATEGIAS DO DUELISTA</p><h2>Decks</h2></div>
+        <div><p class="eyebrow">ESTRATEGIAS DO DUELISTA</p><h2>Meus Decks</h2></div>
         <span id="deckCount" class="section-count"></span>
       </header>
       <div id="decksGrid" class="decks-grid"></div>
+      <div id="decksEmpty" class="empty deck-empty-state" hidden><span>🃏</span><h2>Nenhum deck foi criado</h2><p>Crie decks no app para separar suas estratégias da coleção principal.</p></div>
     </section>
 
-    <section class="collection-section">
+    <section id="collectionSection" class="collection-section" data-panel="collection">
       <header class="section-heading">
         <div><p class="eyebrow">ARQUIVO DE CARTAS</p><h2>Colecao</h2></div>
       </header>
@@ -96,6 +102,6 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="/app.js?v=20260705-3"></script>
+  <script type="module" src="/app.js?v=20260706-1"></script>
 </body>
 </html>

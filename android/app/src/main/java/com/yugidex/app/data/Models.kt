@@ -21,13 +21,15 @@ data class Card(
     @SerializedName("card_images") val images: List<CardImage> = emptyList(),
     @SerializedName("card_sets") val sets: List<CardSet> = emptyList(),
     val localized: Localized? = null,
-    val prices: PriceSummary? = null
+    val prices: PriceSummary? = null,
+    val affiliate: AffiliateLink? = null
 )
 data class CardImage(@SerializedName("image_url") val url: String, @SerializedName("image_url_small") val thumbnail: String? = null)
 data class CardSet(@SerializedName("set_name") val name: String, @SerializedName("set_code") val code: String, @SerializedName("set_rarity") val rarity: String? = null)
 data class Localized(val name: String?, val description: String?)
 data class PriceSummary(val source: String, val currency: String, val min: Double, val max: Double, val editions: List<PriceEdition> = emptyList())
 data class PriceEdition(val edition: String, val price: Double)
+data class AffiliateLink(val url: String, val label: String, val disclosure: String? = null)
 
 @Entity(tableName = "inventory_cards")
 data class InventoryCard(

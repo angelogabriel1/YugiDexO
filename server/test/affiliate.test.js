@@ -1,0 +1,19 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { buildAffiliateLink } from '../src/lib/affiliate.js';
+
+test('gera link afiliado por template de carta', () => {
+  const link = buildAffiliateLink(
+    { id: 46986414, name: 'Dark Magician' },
+    { template: 'https://loja.example/busca?q={encodedName}&ref=yugidex&id={cardId}' }
+  );
+
+  assert.equal(link.url, 'https://loja.example/busca?q=Dark%20Magician&ref=yugidex&id=46986414');
+  assert.equal(link.label, 'Ver oferta da carta');
+  assert.match(link.disclosure, /Link de afiliado/);
+});
+
+test('omite afiliado quando template esta ausente ou invalido', () => {
+  assert.equal(buildAffiliateLink({ id: 1, name: 'Blue-Eyes White Dragon' }), null);
+  assert.equal(buildAffiliateLink({ id: 1, name: 'Blue-Eyes White Dragon' }, { template: 'nao-e-url/{cardId}' }), null);
+});

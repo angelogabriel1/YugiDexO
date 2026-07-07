@@ -1,6 +1,13 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
+const optionalText = z.preprocess(value => {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+}, z.string().optional());
+const textWithDefault = defaultValue => optionalText.transform(value => value ?? defaultValue);
+
 const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   HOST: z.string().default('0.0.0.0'),
@@ -19,6 +26,9 @@ const schema = z.object({
   }, z.string().url().optional()),
   SUPABASE_ANON_KEY: z.string().min(20).optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+  AFFILIATE_CARD_URL_TEMPLATE: optionalText,
+  AFFILIATE_LINK_LABEL: textWithDefault('Ver oferta da carta'),
+  AFFILIATE_DISCLOSURE: textWithDefault('Link de afiliado: podemos receber comissão sem custo extra para você.'),
   BRL_USD_RATE: z.coerce.number().positive().default(5.5),
   MYPCARDS_BASE_URL: z.string().url().default('https://mypcards.com'),
   REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(8000)

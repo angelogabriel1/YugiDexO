@@ -1,11 +1,19 @@
-const state = { cards: [], decks: [], visible: [], username: location.pathname.split('/').filter(Boolean).at(-1) || '' };
+const state = {
+  cards: [],
+  decks: [],
+  visible: [],
+  activeTab: 'collection',
+  username: location.pathname.split('/').filter(Boolean).at(-1) || ''
+};
 const $ = selector => document.querySelector(selector);
+const $$ = selector => [...document.querySelectorAll(selector)];
 const elements = {
   loader: $('#loader'), app: $('#app'), username: $('#username'), summary: $('#summary'),
   estimatedValue: $('#estimatedValue'), estimatedValueCoverage: $('#estimatedValueCoverage'),
   profileSearch: $('#profileSearch'), profileUsername: $('#profileUsername'),
   profileSearchButton: $('#profileSearchButton'), profileSearchError: $('#profileSearchError'),
-  decksSection: $('#decksSection'), decksGrid: $('#decksGrid'), deckCount: $('#deckCount'),
+  tabs: $$('.tab'), panels: $$('[data-panel]'), collectionSection: $('#collectionSection'),
+  decksSection: $('#decksSection'), decksGrid: $('#decksGrid'), deckCount: $('#deckCount'), decksEmpty: $('#decksEmpty'),
   grid: $('#grid'), empty: $('#empty'), search: $('#search'), rarity: $('#rarity'),
   modal: $('#detailsModal'), modalBody: $('#modalBody'), toast: $('#toast'),
   summonButton: $('#summonButton'), summoning: $('#summoning'), exodiaImage: $('#exodiaImage'),
@@ -100,8 +108,8 @@ function configureFilters() {
 }
 
 function renderDecks() {
-  elements.decksSection.hidden = state.decks.length === 0;
   elements.deckCount.textContent = `${state.decks.length} deck${state.decks.length === 1 ? '' : 's'}`;
+  elements.decksEmpty.hidden = state.decks.length > 0;
   elements.decksGrid.innerHTML = state.decks.map(deck => {
     const owned = deck.cards.filter(card => card.status === 'owned').reduce((sum, card) => sum + card.quantity, 0);
     const missing = deck.cards.filter(card => card.status === 'missing').reduce((sum, card) => sum + card.quantity, 0);
@@ -122,6 +130,16 @@ function renderDecks() {
   }).join('');
 }
 
+function switchTab(tab) {
+  state.activeTab = tab === 'decks' ? 'decks' : 'collection';
+  elements.tabs.forEach(button => {
+    const active = button.dataset.tab === state.activeTab;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  elements.panels.forEach(panel => { panel.hidden = panel.dataset.panel !== state.activeTab; });
+}
+
 async function loadCollection({ live = false } = {}) {
   const response = await fetch(`/api/collections/${encodeURIComponent(state.username)}`, { cache: live ? 'no-store' : 'default' });
   if (!response.ok) throw new Error(response.status === 404 ? 'Duelista nao encontrado' : 'Nao foi possivel abrir a colecao');
@@ -140,7 +158,7 @@ async function loadCollection({ live = false } = {}) {
   elements.estimatedValueCoverage.textContent = priced < total
     ? `${priced} de ${total} cartas com cotacao disponivel`
     : 'Estimativa baseada nas cotacoes disponiveis';
-  configureFilters(); render(); renderDecks();
+  configureFilters(); render(); renderDecks(); switchTab(state.activeTab);
   elements.summonButton.hidden = !hasExodia(state.cards);
   document.title = `Colecao de ${payload.profile.username} — Yugidex`;
   if (live) showToast('Colecao sincronizada com sucesso!');
@@ -156,6 +174,7 @@ async function openDetails(id) {
     const card = await response.json();
     const name = card.localized?.name || card.name;
     const description = card.localized?.description || card.desc || '';
+    const affiliate = card.affiliate?.url ? card.affiliate : null;
     elements.modalBody.innerHTML = `
       <img src="${escapeHtml(card.card_images?.[0]?.image_url || imageFor(basic))}" alt="${escapeHtml(name)}">
       <section class="details"><p class="eyebrow">REGISTRO DO ORACULO</p><h2>${escapeHtml(name)}</h2>
@@ -165,6 +184,10 @@ async function openDetails(id) {
         <div class="prices"><p class="eyebrow">COTACOES • ${escapeHtml(card.prices.source)}</p>
           ${(card.prices.editions || []).slice(0, 10).map(item => `<div class="price"><span>${escapeHtml(item.edition)}</span><strong>${formatMoney(item.price)}</strong></div>`).join('') || '<p class="subtitle">Nenhuma cotacao disponivel.</p>'}
         </div>
+        ${affiliate ? `<div class="affiliate-box">
+          <a class="affiliate-link" href="${escapeHtml(affiliate.url)}" target="_blank" rel="sponsored noopener noreferrer">${escapeHtml(affiliate.label || 'Ver oferta da carta')}</a>
+          ${affiliate.disclosure ? `<small>${escapeHtml(affiliate.disclosure)}</small>` : ''}
+        </div>` : ''}
       </section>`;
   } catch { elements.modalBody.innerHTML = '<div class="details"><h2>O oraculo silenciou</h2><p class="description">Nao foi possivel carregar os detalhes desta carta agora.</p></div>'; }
 }
@@ -207,6 +230,7 @@ function connectLive() {
 
 elements.search.addEventListener('input', render);
 elements.rarity.addEventListener('change', render);
+elements.tabs.forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)));
 elements.profileSearch.addEventListener('submit', searchProfile);
 elements.grid.addEventListener('click', event => event.target.closest('.card') && revealCard(event.target.closest('.card').dataset.id));
 elements.grid.addEventListener('keydown', event => { if (['Enter', ' '].includes(event.key) && event.target.closest('.card')) revealCard(event.target.closest('.card').dataset.id); });

@@ -47,7 +47,7 @@ private fun YugidexRoot(vm: YugidexViewModel = viewModel()) {
             if (current !is DetailsKey && current !is DeckEditorKey) NavigationBar {
                 NavigationBarItem(selected = current is ScannerKey, onClick = { backStack.clear(); backStack.add(ScannerKey) }, icon = { Icon(Icons.Rounded.PhotoCamera, null) }, label = { Text("Scanner") })
                 NavigationBarItem(selected = current is InventoryKey, onClick = { backStack.clear(); backStack.add(InventoryKey) }, icon = { Icon(Icons.Rounded.Inventory2, null) }, label = { Text("Inventario") })
-                NavigationBarItem(selected = current is DecksKey, onClick = { backStack.clear(); backStack.add(DecksKey) }, icon = { Icon(Icons.Rounded.Style, null) }, label = { Text("Decks") })
+                NavigationBarItem(selected = current is DecksKey, onClick = { backStack.clear(); backStack.add(DecksKey) }, icon = { Icon(Icons.Rounded.Style, null) }, label = { Text("Meus Decks") })
             }
         }
     ) { padding ->

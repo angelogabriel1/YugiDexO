@@ -18,11 +18,13 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.BookmarkAdd
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.CollectionsBookmark
+import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -48,6 +50,7 @@ fun CardDetailsScreen(
     var collectionName by remember(card.id) { mutableStateOf<String?>(null) }
     var added by remember(card.id) { mutableStateOf(false) }
     val scroll = rememberScrollState()
+    val uriHandler = LocalUriHandler.current
 
     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(SpellPurple, DarkObsidian)))) {
         kind?.let { LegendaryAmbient(it) }
@@ -80,6 +83,30 @@ fun CardDetailsScreen(
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyLarge
                 )
+                card.affiliate?.takeIf { it.url.isNotBlank() }?.let { affiliate ->
+                    Spacer(Modifier.height(18.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = CardViolet,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PharaohGold.copy(alpha = .34f))
+                    ) {
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Oferta afiliada", color = MysticGold, style = MaterialTheme.typography.labelLarge)
+                            Button(
+                                onClick = { uriHandler.openUri(affiliate.url) },
+                                colors = ButtonDefaults.buttonColors(containerColor = PharaohGold)
+                            ) {
+                                Icon(Icons.Rounded.ShoppingCart, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(affiliate.label.ifBlank { "Ver oferta da carta" })
+                            }
+                            affiliate.disclosure?.takeIf { it.isNotBlank() }?.let { disclosure ->
+                                Text(disclosure, color = TextGray, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
 
                 Spacer(Modifier.height(24.dp))
                 Text("Colecao da carta", style = MaterialTheme.typography.titleLarge, color = MysticGold)

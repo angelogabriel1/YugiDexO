@@ -4,6 +4,8 @@ import { pool } from '../db.js';
 import { sseHub } from '../lib/sseHub.js';
 import { getCardDetails } from '../services/cardService.js';
 import { cardImageUrl } from '../lib/cardImages.js';
+import { buildAffiliateLink } from '../lib/affiliate.js';
+import { config } from '../config.js';
 import { mapDecks } from './decks.js';
 
 export const publicRouter = Router();
@@ -62,7 +64,15 @@ publicRouter.get('/collections/:username', async (req, res) => {
 publicRouter.get('/card-details', async (req, res) => {
   const query = z.object({ id: z.coerce.number().int().positive().optional(), name: z.string().min(1).max(200).optional() })
     .refine(value => value.id || value.name, 'Informe id ou name').parse(req.query);
-  res.json(await getCardDetails(query));
+  const card = await getCardDetails(query);
+  res.json({
+    ...card,
+    affiliate: buildAffiliateLink(card, {
+      template: config.AFFILIATE_CARD_URL_TEMPLATE,
+      label: config.AFFILIATE_LINK_LABEL,
+      disclosure: config.AFFILIATE_DISCLOSURE
+    })
+  });
 });
 
 publicRouter.get('/colecao-stream/:username', (req, res) => {

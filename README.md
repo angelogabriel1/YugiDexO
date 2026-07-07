@@ -11,7 +11,7 @@ Ecossistema para escanear, organizar e compartilhar colecoes de Yu-Gi-Oh!:
 O app tambem permite criar decks personalizados, combinar cartas que ja estao no
 inventario com cartas marcadas como faltantes e sincronizar esses decks na conta.
 Os decks tambem aparecem no perfil publico compartilhado, com os dois estados
-visualmente diferenciados.
+visualmente diferenciados, em uma aba propria "Meus Decks" no portal web e no app.
 
 O inventario mostra um valor aproximado em reais, calculado pela menor cotacao
 disponivel de cada carta multiplicada pela quantidade. Quando alguma carta ainda
@@ -77,11 +77,19 @@ NEON_AUTH_URL
 PUBLIC_ORIGIN=https://SEU-APP.up.railway.app
 R2_PUBLIC_URL=https://cartas.seudominio.com
 BRL_USD_RATE=5.50
+AFFILIATE_CARD_URL_TEMPLATE=https://sua-loja.example/busca?q={encodedName}&ref=SEU_CODIGO
+AFFILIATE_LINK_LABEL=Ver oferta da carta
 ```
 
 As chaves de escrita do R2 nao sao necessarias no servidor em execucao; use-as
 somente ao rodar `r2:sync`. O Railway fornece `PORT` automaticamente e verifica
 `/api/health` antes de ativar uma nova versao.
+
+O template de afiliado e opcional. Quando `AFFILIATE_CARD_URL_TEMPLATE` estiver
+configurado, os detalhes das cartas no site e no app exibem um botao de oferta.
+Placeholders aceitos: `{cardId}`, `{id}`, `{card_id}`, `{name}`,
+`{encodedName}` e `{query}`. Todos sao escapados para uso seguro em URL.
+Voce tambem pode ajustar o aviso exibido com `AFFILIATE_DISCLOSURE`.
 
 Depois de gerar o dominio do Railway, adicione essa URL como origem confiavel nas
 configuracoes do Neon Auth. Em seguida, gere o APK de producao usando a mesma URL
