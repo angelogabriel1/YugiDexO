@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import { config } from '../config.js';
 import { fetchHtml, fetchJson } from '../lib/http.js';
 import { withHostedImages } from '../lib/cardImages.js';
+import { fallbackPrices } from '../lib/cardPrices.js';
 
 const YGO = 'https://db.ygoprodeck.com/api/v7';
 
@@ -59,23 +60,6 @@ export async function scrapeMyPCards(name) {
   return { source: 'mypcards', currency: 'BRL', min: unique[0].price, max: unique.at(-1).price, editions: unique };
 }
 
-function fallbackPrices(card) {
-  const raw = card.card_prices?.[0] ?? {};
-  const markets = [
-    ['Cardmarket', raw.cardmarket_price],
-    ['TCGplayer', raw.tcgplayer_price],
-    ['eBay', raw.ebay_price]
-  ].map(([market, value]) => ({ market, usd: Number(value) }))
-    .filter(item => Number.isFinite(item.usd) && item.usd > 0);
-  const averageUsd = markets.length ? markets.reduce((sum, item) => sum + item.usd, 0) / markets.length : 0;
-  const averageBrl = Number((averageUsd * config.BRL_USD_RATE).toFixed(2));
-  return {
-    source: 'ygoprodeck', currency: 'BRL', min: averageBrl, max: averageBrl,
-    usdRate: config.BRL_USD_RATE,
-    editions: markets.map(item => ({ edition: item.market, price: Number((item.usd * config.BRL_USD_RATE).toFixed(2)) }))
-  };
-}
-
 export async function getCardDetails({ id, name }) {
   const query = new URLSearchParams(id ? { id: String(id) } : { name });
   const [english, portuguese] = await Promise.allSettled([
@@ -88,7 +72,7 @@ export async function getCardDetails({ id, name }) {
   const translated = portuguese.status === 'fulfilled' ? portuguese.value.data?.[0] : null;
   let prices;
   try { prices = await scrapeMyPCards(translated?.name || card.name); }
-  catch { prices = fallbackPrices(card); }
+  catch { prices = fallbackPrices(card, config.BRL_USD_RATE); }
   return withHostedImages({
     ...card,
     localized: translated ? { name: translated.name, description: translated.desc } : null,

@@ -45,7 +45,7 @@ interface DeckDao {
     }
 }
 
-@Database(entities = [InventoryCard::class, DeckEntity::class, DeckCardEntity::class], version = 5, exportSchema = false)
+@Database(entities = [InventoryCard::class, DeckEntity::class, DeckCardEntity::class], version = 6, exportSchema = false)
 abstract class InventoryDatabase : RoomDatabase() {
     abstract fun inventory(): InventoryDao
     abstract fun decks(): DeckDao
@@ -95,9 +95,15 @@ abstract class InventoryDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE deck_cards ADD COLUMN affiliateProvider TEXT")
             }
         }
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Invalida as medias antigas para recalcular pela menor cotacao por edicao.
+                db.execSQL("UPDATE inventory_cards SET estimatedUnitValue = NULL")
+            }
+        }
 
         fun create(context: Context) = Room.databaseBuilder(context, InventoryDatabase::class.java, "ygo_inventory.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
     }
 }
