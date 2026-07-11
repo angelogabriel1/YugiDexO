@@ -11,6 +11,32 @@ import { mapDecks } from './decks.js';
 export const publicRouter = Router();
 const username = z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/);
 
+function normalizedNames(card) {
+  return [...new Set([card.name, card.localized?.name].filter(Boolean).map(name => String(name).trim().toLowerCase()))];
+}
+
+async function findAffiliateLink(card) {
+  const cardId = Number(card.id);
+  const names = normalizedNames(card);
+  try {
+    const result = await pool.query(`
+      select card_id, card_name, affiliate_url, provider, label
+      from affiliate_links
+      where active = true
+        and (
+          card_id = $1
+          or lower(card_name) = any($2::text[])
+        )
+      order by case when card_id = $1 then 0 else 1 end, updated_at desc
+      limit 1
+    `, [Number.isFinite(cardId) ? cardId : null, names]);
+    return result.rows[0] ?? null;
+  } catch (error) {
+    if (error.code === '42P01') return null;
+    throw error;
+  }
+}
+
 publicRouter.get('/profiles/:username', async (req, res) => {
   const handle = username.parse(req.params.username).toLowerCase();
   const profile = (await pool.query(
@@ -65,12 +91,16 @@ publicRouter.get('/card-details', async (req, res) => {
   const query = z.object({ id: z.coerce.number().int().positive().optional(), name: z.string().min(1).max(200).optional() })
     .refine(value => value.id || value.name, 'Informe id ou name').parse(req.query);
   const card = await getCardDetails(query);
+  const storedAffiliate = await findAffiliateLink(card);
   res.json({
     ...card,
     affiliate: buildAffiliateLink(card, {
-      links: config.AFFILIATE_CARD_LINKS_JSON,
+      links: storedAffiliate
+        ? { [card.id]: storedAffiliate.affiliate_url }
+        : config.AFFILIATE_CARD_LINKS_JSON,
       template: config.AFFILIATE_CARD_URL_TEMPLATE,
-      label: config.AFFILIATE_LINK_LABEL,
+      label: storedAffiliate?.label || config.AFFILIATE_LINK_LABEL,
+      provider: storedAffiliate?.provider,
       disclosure: config.AFFILIATE_DISCLOSURE
     })
   });

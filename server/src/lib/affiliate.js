@@ -25,6 +25,7 @@ function affiliateResponse(url, options) {
     return {
       url: new URL(url).toString(),
       label: options.label?.trim() || 'Ver oferta da carta',
+      provider: options.provider?.trim() || null,
       disclosure: options.disclosure?.trim() || defaultDisclosure
     };
   } catch {

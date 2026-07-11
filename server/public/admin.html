@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0814">
+  <title>Yugidex — Administração</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/admin.css?v=20260710-1">
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-hero">
+      <p class="eyebrow">PAINEL DO FARAÓ</p>
+      <h1>Administração Yugidex</h1>
+      <p>Cadastre links afiliados por carta e transforme cartas faltantes em oportunidades de compra.</p>
+    </header>
+
+    <section id="loginPanel" class="panel">
+      <h2>Entrar como administrador</h2>
+      <p class="muted">Use a mesma conta do app. O servidor só libera este painel para usuários configurados como admin.</p>
+      <form id="loginForm" class="stack">
+        <label>Email<input id="email" type="email" autocomplete="email" required></label>
+        <label>Senha<input id="password" type="password" autocomplete="current-password" minlength="8" required></label>
+        <button type="submit">Abrir painel</button>
+      </form>
+    </section>
+
+    <section id="adminPanel" class="admin-grid" hidden>
+      <aside class="panel admin-card">
+        <div class="row">
+          <div>
+            <p class="eyebrow">ADMIN</p>
+            <h2 id="adminName">Duelista</h2>
+            <p id="adminEmail" class="muted"></p>
+          </div>
+          <button id="logoutButton" class="ghost" type="button">Sair</button>
+        </div>
+      </aside>
+
+      <section class="panel editor">
+        <div class="row">
+          <div>
+            <p class="eyebrow">AFILIADOS</p>
+            <h2 id="formTitle">Novo link afiliado</h2>
+          </div>
+          <button id="clearButton" class="ghost" type="button">Limpar</button>
+        </div>
+
+        <div class="lookup">
+          <label>ID da carta<input id="lookupId" type="number" min="1" placeholder="Ex.: 46986414"></label>
+          <label>Nome da carta<input id="lookupName" type="search" placeholder="Ex.: Dark Magician"></label>
+          <button id="lookupButton" type="button">Buscar carta</button>
+        </div>
+        <div id="lookupResult" class="lookup-result" hidden></div>
+
+        <form id="affiliateForm" class="stack">
+          <input id="linkId" type="hidden">
+          <div class="form-grid">
+            <label>ID da carta<input id="cardId" type="number" min="1" placeholder="Opcional, mas recomendado"></label>
+            <label>Nome da carta<input id="cardName" type="text" maxlength="200" required></label>
+          </div>
+          <label>Link afiliado<input id="affiliateUrl" type="url" placeholder="https://meli.la/..." required></label>
+          <div class="form-grid">
+            <label>Provedor<input id="provider" type="text" maxlength="80" value="Mercado Livre" required></label>
+            <label>Texto do botão<input id="label" type="text" maxlength="120" placeholder="Ver oferta da carta"></label>
+          </div>
+          <label>Observações<textarea id="notes" maxlength="500" rows="3" placeholder="Ex.: carta Platinum Secret Rare, vendedor X..."></textarea></label>
+          <label class="check"><input id="active" type="checkbox" checked> Link ativo</label>
+          <button type="submit">Salvar link</button>
+        </form>
+      </section>
+
+      <section class="panel list-panel">
+        <div class="row">
+          <div>
+            <p class="eyebrow">CATÁLOGO</p>
+            <h2>Links cadastrados</h2>
+          </div>
+          <span id="linkCount" class="count">0</span>
+        </div>
+        <label class="search">Pesquisar<input id="linkSearch" type="search" placeholder="Nome, ID ou provedor"></label>
+        <div id="linksList" class="links-list"></div>
+      </section>
+    </section>
+
+    <p id="status" class="toast" role="status" aria-live="polite"></p>
+  </main>
+  <script type="module" src="/admin.js?v=20260710-1"></script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import { config } from './config.js';
 import { authRouter } from './routes/auth.js';
 import { cardsRouter } from './routes/cards.js';
 import { decksRouter } from './routes/decks.js';
+import { adminRouter } from './routes/admin.js';
 import { publicRouter } from './routes/public.js';
 import { errorHandler, notFound } from './middleware/errors.js';
 
@@ -21,6 +22,7 @@ app.use('/api', rateLimit({ windowMs: 60_000, limit: 180, standardHeaders: 'draf
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60_000, limit: 30 }), authRouter);
 app.use('/api/cards', cardsRouter);
 app.use('/api/decks', decksRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api', publicRouter);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use(express.static(join(root, '../public'), {
@@ -32,6 +34,10 @@ app.use(express.static(join(root, '../public'), {
 app.get('/colecao/:username', (req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.sendFile(join(root, '../public/index.html'));
+});
+app.get('/admin', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(join(root, '../public/admin.html'));
 });
 app.use('/api', notFound);
 app.get('*splat', (req, res) => res.redirect('/colecao/duelista'));

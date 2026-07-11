@@ -58,10 +58,29 @@ create table if not exists public.deck_cards (
 create index if not exists decks_user_updated_idx on public.decks(user_id, updated_at desc);
 create index if not exists deck_cards_card_idx on public.deck_cards(card_id);
 
+create table if not exists public.affiliate_links (
+  id uuid primary key default gen_random_uuid(),
+  card_id bigint check (card_id is null or card_id > 0),
+  card_name text not null check (length(card_name) between 1 and 200),
+  affiliate_url text not null check (affiliate_url ~ '^https?://'),
+  provider text not null default 'Mercado Livre' check (length(provider) between 1 and 80),
+  label text check (label is null or length(label) <= 120),
+  active boolean not null default true,
+  notes text check (notes is null or length(notes) <= 500),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists affiliate_links_card_id_key
+  on public.affiliate_links(card_id) where card_id is not null;
+create index if not exists affiliate_links_name_idx on public.affiliate_links(lower(card_name));
+create index if not exists affiliate_links_active_idx on public.affiliate_links(active, updated_at desc);
+
 alter table public.profiles enable row level security;
 alter table public.cards enable row level security;
 alter table public.decks enable row level security;
 alter table public.deck_cards enable row level security;
+alter table public.affiliate_links enable row level security;
 
 drop policy if exists "profile readable by owner" on public.profiles;
 create policy "profile readable by owner" on public.profiles for select using (auth.uid() = id);

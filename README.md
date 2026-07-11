@@ -76,6 +76,7 @@ DATABASE_URL
 NEON_AUTH_URL
 PUBLIC_ORIGIN=https://SEU-APP.up.railway.app
 R2_PUBLIC_URL=https://cartas.seudominio.com
+ADMIN_EMAILS=voce@example.com
 BRL_USD_RATE=5.50
 AFFILIATE_CARD_LINKS_JSON={"46986414":"https://meli.la/2Z62nSs"}
 AFFILIATE_CARD_URL_TEMPLATE=https://sua-loja.example/busca?q={encodedName}&ref=SEU_CODIGO
@@ -86,14 +87,19 @@ As chaves de escrita do R2 nao sao necessarias no servidor em execucao; use-as
 somente ao rodar `r2:sync`. O Railway fornece `PORT` automaticamente e verifica
 `/api/health` antes de ativar uma nova versao.
 
-Os links de afiliado sao opcionais. Para Mercado Livre, use
-`AFFILIATE_CARD_LINKS_JSON` para mapear cada carta ao link curto gerado no Portal
-do Afiliado, por `cardId` ou nome da carta, por exemplo
-`{"46986414":"https://meli.la/2Z62nSs"}`. Quando nao houver link especifico, o
-app pode cair no `AFFILIATE_CARD_URL_TEMPLATE`, se configurado. Placeholders
-aceitos no template: `{cardId}`, `{id}`, `{card_id}`, `{name}`, `{encodedName}`
-e `{query}`. Voce tambem pode ajustar o aviso exibido com
-`AFFILIATE_DISCLOSURE`.
+O painel administrativo fica em `/admin` e usa o login normal do app. Para liberar
+o acesso, configure pelo menos uma das variaveis `ADMIN_EMAILS`,
+`ADMIN_USER_IDS` ou `ADMIN_USERNAMES` com valores separados por virgula.
+
+Os links de afiliado sao opcionais. Para Mercado Livre, use preferencialmente o
+painel `/admin` para cadastrar cada carta com o link curto gerado no Portal do
+Afiliado. `AFFILIATE_CARD_LINKS_JSON` continua disponivel como fallback por
+ambiente, por `cardId` ou nome da carta, por exemplo
+`{"46986414":"https://meli.la/2Z62nSs"}`. Quando nao houver link especifico no
+banco ou no JSON, o app pode cair no `AFFILIATE_CARD_URL_TEMPLATE`, se
+configurado. Placeholders aceitos no template: `{cardId}`, `{id}`, `{card_id}`,
+`{name}`, `{encodedName}` e `{query}`. Voce tambem pode ajustar o aviso exibido
+com `AFFILIATE_DISCLOSURE`.
 
 Depois de gerar o dominio do Railway, adicione essa URL como origem confiavel nas
 configuracoes do Neon Auth. Em seguida, gere o APK de producao usando a mesma URL
@@ -111,6 +117,11 @@ HTTPS como `API_BASE_URL`.
 - `PUT /api/decks/:id` (Bearer token)
 - `DELETE /api/decks/:id` (Bearer token)
 - `POST /api/decks/sync` (Bearer token)
+- `GET /api/admin/me` (Bearer token de admin)
+- `GET /api/admin/affiliate-links` (Bearer token de admin)
+- `POST /api/admin/affiliate-links` (Bearer token de admin)
+- `PUT /api/admin/affiliate-links/:id` (Bearer token de admin)
+- `DELETE /api/admin/affiliate-links/:id` (Bearer token de admin)
 - `GET /api/collections/:username`
 - `GET /api/card-details?id=<id>&name=<name>`
 - `GET /api/colecao-stream/:username`
