@@ -178,6 +178,7 @@ async function openDetails(id) {
     const description = card.localized?.description || card.desc || '';
     const affiliate = card.affiliate?.url ? card.affiliate : null;
     const affiliateHost = affiliate ? new URL(affiliate.url).hostname.replace(/^www\./, '') : '';
+    card.prices ||= { source: 'indisponivel', editions: [] };
     elements.modalBody.innerHTML = `
       <img src="${escapeHtml(card.card_images?.[0]?.image_url || imageFor(basic))}" alt="${escapeHtml(name)}">
       <section class="details"><p class="eyebrow">REGISTRO DO ORACULO</p><h2>${escapeHtml(name)}</h2>

@@ -1,10 +1,12 @@
 import { pool } from '../src/db.js';
 import { getCardDetails } from '../src/services/cardService.js';
 
+const refresh = process.argv.includes('--refresh');
+
 const cards = (await pool.query(`
   select card_id, min(name) as name
   from cards
-  where estimated_unit_value is null
+  ${refresh ? '' : 'where estimated_unit_value is null'}
   group by card_id
   order by card_id
 `)).rows;
@@ -19,7 +21,8 @@ try {
       const value = Number(details.prices?.min);
       if (!Number.isFinite(value) || value < 0) throw new Error('Cotacao indisponivel');
       const result = await pool.query(
-        'update cards set estimated_unit_value = $1 where card_id = $2 and estimated_unit_value is null',
+        `update cards set estimated_unit_value = $1 where card_id = $2
+         ${refresh ? '' : 'and estimated_unit_value is null'}`,
         [value, card.card_id]
       );
       updated += result.rowCount;

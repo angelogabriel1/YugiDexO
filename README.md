@@ -141,7 +141,8 @@ npm --workspace server run auth:smoke
 Antes de uma migracao em producao, gere um backup logico com
 `npm --workspace server run db:backup`. Depois de adicionar o campo de valor a um
 banco existente, `npm --workspace server run db:backfill-values` preenche as
-cotacoes que estiverem faltando.
+cotacoes que estiverem faltando. Para substituir cotacoes antigas depois de uma
+mudanca na regra de precos, execute `npm --workspace server run db:backfill-values -- --refresh`.
 
 O `auth:smoke` cria uma conta descartavel, testa autenticacao, sincronizacao,
 download do inventario, portal publico e logout, e remove a conta ao final.
