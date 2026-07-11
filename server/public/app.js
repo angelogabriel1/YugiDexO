@@ -175,6 +175,7 @@ async function openDetails(id) {
     const name = card.localized?.name || card.name;
     const description = card.localized?.description || card.desc || '';
     const affiliate = card.affiliate?.url ? card.affiliate : null;
+    const affiliateHost = affiliate ? new URL(affiliate.url).hostname.replace(/^www\./, '') : '';
     elements.modalBody.innerHTML = `
       <img src="${escapeHtml(card.card_images?.[0]?.image_url || imageFor(basic))}" alt="${escapeHtml(name)}">
       <section class="details"><p class="eyebrow">REGISTRO DO ORACULO</p><h2>${escapeHtml(name)}</h2>
@@ -185,7 +186,9 @@ async function openDetails(id) {
           ${(card.prices.editions || []).slice(0, 10).map(item => `<div class="price"><span>${escapeHtml(item.edition)}</span><strong>${formatMoney(item.price)}</strong></div>`).join('') || '<p class="subtitle">Nenhuma cotacao disponivel.</p>'}
         </div>
         ${affiliate ? `<div class="affiliate-box">
-          <a class="affiliate-link" href="${escapeHtml(affiliate.url)}" target="_blank" rel="sponsored noopener noreferrer">${escapeHtml(affiliate.label || 'Ver oferta da carta')}</a>
+          <p class="eyebrow">OFERTA AFILIADA${affiliate.provider ? ` • ${escapeHtml(affiliate.provider)}` : ''}</p>
+          <a class="affiliate-link" href="${escapeHtml(affiliate.url)}" target="_blank" rel="sponsored noopener noreferrer">🔗 ${escapeHtml(affiliate.label || 'Ver oferta da carta')}</a>
+          <a class="affiliate-url" href="${escapeHtml(affiliate.url)}" target="_blank" rel="sponsored noopener noreferrer">${escapeHtml(affiliateHost || affiliate.url)}</a>
           ${affiliate.disclosure ? `<small>${escapeHtml(affiliate.disclosure)}</small>` : ''}
         </div>` : ''}
       </section>`;
