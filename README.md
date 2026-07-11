@@ -12,6 +12,9 @@ O app tambem permite criar decks personalizados, combinar cartas que ja estao no
 inventario com cartas marcadas como faltantes e sincronizar esses decks na conta.
 Os decks tambem aparecem no perfil publico compartilhado, com os dois estados
 visualmente diferenciados, em uma aba propria "Meus Decks" no portal web e no app.
+Quando uma carta faltante possui link afiliado cadastrado, o perfil publico exibe
+um botao de compra diretamente dentro do deck; no Android, decks sincronizados
+tambem preservam esse link para consulta na edicao do deck.
 
 O inventario mostra um valor aproximado em reais, calculado pela menor cotacao
 disponivel de cada carta multiplicada pela quantidade. Quando alguma carta ainda

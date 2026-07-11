@@ -45,7 +45,7 @@ interface DeckDao {
     }
 }
 
-@Database(entities = [InventoryCard::class, DeckEntity::class, DeckCardEntity::class], version = 4, exportSchema = false)
+@Database(entities = [InventoryCard::class, DeckEntity::class, DeckCardEntity::class], version = 5, exportSchema = false)
 abstract class InventoryDatabase : RoomDatabase() {
     abstract fun inventory(): InventoryDao
     abstract fun decks(): DeckDao
@@ -88,9 +88,16 @@ abstract class InventoryDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_deck_cards_deckId ON deck_cards(deckId)")
             }
         }
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE deck_cards ADD COLUMN affiliateUrl TEXT")
+                db.execSQL("ALTER TABLE deck_cards ADD COLUMN affiliateLabel TEXT")
+                db.execSQL("ALTER TABLE deck_cards ADD COLUMN affiliateProvider TEXT")
+            }
+        }
 
         fun create(context: Context) = Room.databaseBuilder(context, InventoryDatabase::class.java, "ygo_inventory.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
     }
 }

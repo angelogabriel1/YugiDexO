@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { pool, transaction } from '../db.js';
 import { sseHub } from '../lib/sseHub.js';
+import { attachAffiliateLinks } from '../lib/affiliateLookup.js';
 
 export const decksRouter = Router();
 
@@ -56,7 +57,9 @@ async function readDecks(userId, client = pool) {
     where d.user_id = $1
     order by d.updated_at desc, dc.added_at, dc.name
   `, [userId]);
-  return mapDecks(result.rows);
+  const decks = mapDecks(result.rows);
+  await attachAffiliateLinks(client, decks.flatMap(deck => deck.cards), { onlyMissing: true });
+  return decks;
 }
 
 async function replaceDeckCards(client, deckId, cards) {

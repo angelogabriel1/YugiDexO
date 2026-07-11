@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -120,7 +121,14 @@ fun DeckEditorScreen(
     val selected = remember(deckId) {
         mutableStateMapOf<Long, DeckCardPayload>().apply {
             deck?.cards?.forEach { card ->
-                put(card.cardId, DeckCardPayload(card.cardId, card.name, card.imageUrl, card.type, card.attribute, card.rarity, card.status, card.quantity))
+                put(
+                    card.cardId,
+                    DeckCardPayload(
+                        card.cardId, card.name, card.imageUrl, card.type, card.attribute,
+                        card.rarity, card.status, card.quantity,
+                        card.affiliateUrl?.let { AffiliateLink(it, card.affiliateLabel ?: "Ver oferta da carta", card.affiliateProvider) }
+                    )
+                )
             }
         }
     }
@@ -235,6 +243,7 @@ private fun SectionTitle(title: String, subtitle: String) {
 
 @Composable
 private fun DeckCardRow(card: DeckCardPayload, selected: Boolean, onToggle: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
     Card(colors = CardDefaults.cardColors(containerColor = CardViolet)) {
         Row(
             Modifier.fillMaxWidth().padding(10.dp),
@@ -251,6 +260,16 @@ private fun DeckCardRow(card: DeckCardPayload, selected: Boolean, onToggle: () -
                     color = if (card.status == OWNED) MysticGold else MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.labelMedium
                 )
+                card.affiliate?.takeIf { card.status == MISSING && it.url.isNotBlank() }?.let { affiliate ->
+                    TextButton(
+                        onClick = { uriHandler.openUri(affiliate.url) },
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Rounded.ShoppingCart, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(affiliate.label.ifBlank { "Comprar carta" })
+                    }
+                }
             }
             Checkbox(checked = selected, onCheckedChange = { onToggle() })
         }

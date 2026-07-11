@@ -167,7 +167,10 @@ class YugidexViewModel(application: Application) : AndroidViewModel(application)
                 DeckCardEntity(
                     deckId = id, cardId = card.cardId, name = card.name,
                     imageUrl = card.imageUrl, type = card.type, attribute = card.attribute,
-                    rarity = card.rarity, status = card.status, quantity = card.quantity
+                    rarity = card.rarity, status = card.status, quantity = card.quantity,
+                    affiliateUrl = card.affiliate?.url,
+                    affiliateLabel = card.affiliate?.label,
+                    affiliateProvider = card.affiliate?.provider
                 )
             }
         )
@@ -284,7 +287,10 @@ private fun DeckWithCards.toPayload() = DeckPayload(
         DeckCardPayload(
             cardId = card.cardId, name = card.name, imageUrl = card.imageUrl,
             type = card.type, attribute = card.attribute, rarity = card.rarity,
-            status = card.status, quantity = card.quantity
+            status = card.status, quantity = card.quantity,
+            affiliate = card.affiliateUrl?.let {
+                AffiliateLink(it, card.affiliateLabel ?: "Ver oferta da carta", card.affiliateProvider)
+            }
         )
     }
 )
@@ -302,7 +308,10 @@ private suspend fun DeckDao.savePayload(payload: DeckPayload) {
             DeckCardEntity(
                 deckId = payload.id, cardId = card.cardId, name = card.name,
                 imageUrl = card.imageUrl, type = card.type, attribute = card.attribute,
-                rarity = card.rarity, status = card.status, quantity = card.quantity
+                rarity = card.rarity, status = card.status, quantity = card.quantity,
+                affiliateUrl = card.affiliate?.url,
+                affiliateLabel = card.affiliate?.label,
+                affiliateProvider = card.affiliate?.provider
             )
         }
     )

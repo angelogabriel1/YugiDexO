@@ -29,7 +29,7 @@ data class CardSet(@SerializedName("set_name") val name: String, @SerializedName
 data class Localized(val name: String?, val description: String?)
 data class PriceSummary(val source: String, val currency: String, val min: Double, val max: Double, val editions: List<PriceEdition> = emptyList())
 data class PriceEdition(val edition: String, val price: Double)
-data class AffiliateLink(val url: String, val label: String, val disclosure: String? = null)
+data class AffiliateLink(val url: String, val label: String, val provider: String? = null, val disclosure: String? = null)
 
 @Entity(tableName = "inventory_cards")
 data class InventoryCard(
@@ -79,7 +79,10 @@ data class DeckCardEntity(
     val attribute: String?,
     val rarity: String?,
     val status: String,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val affiliateUrl: String? = null,
+    val affiliateLabel: String? = null,
+    val affiliateProvider: String? = null
 )
 
 data class DeckWithCards(
@@ -96,7 +99,8 @@ data class DeckCardPayload(
     val attribute: String?,
     val rarity: String?,
     val status: String,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val affiliate: AffiliateLink? = null
 )
 
 data class DeckPayload(

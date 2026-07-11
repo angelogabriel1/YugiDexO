@@ -113,16 +113,18 @@ function renderDecks() {
   elements.decksGrid.innerHTML = state.decks.map(deck => {
     const owned = deck.cards.filter(card => card.status === 'owned').reduce((sum, card) => sum + card.quantity, 0);
     const missing = deck.cards.filter(card => card.status === 'missing').reduce((sum, card) => sum + card.quantity, 0);
+    const purchasable = deck.cards.filter(card => card.status === 'missing' && card.affiliate?.url).reduce((sum, card) => sum + card.quantity, 0);
     return `<details class="deck-panel">
       <summary>
         <span><strong>${escapeHtml(deck.name)}</strong><small>${deck.cards.length} carta${deck.cards.length === 1 ? '' : 's'} unica${deck.cards.length === 1 ? '' : 's'}</small></span>
-        <span class="deck-summary-status"><b class="owned">${owned} na colecao</b><b class="missing">${missing} faltando</b></span>
+        <span class="deck-summary-status"><b class="owned">${owned} na colecao</b><b class="missing">${missing} faltando</b>${purchasable ? `<b class="shopping">${purchasable} com oferta</b>` : ''}</span>
       </summary>
       <div class="deck-card-grid">
         ${deck.cards.map(card => `<article class="deck-card status-${card.status}">
           <img src="${escapeHtml(deckImageFor(card))}" alt="${escapeHtml(card.name)}" loading="lazy">
           <div><strong>${escapeHtml(card.name)}</strong><small>${escapeHtml(card.rarity || card.attribute || card.type || 'Carta')}</small>
             <span class="deck-status">${card.status === 'owned' ? 'Na Colecao' : 'Faltando'}${card.quantity > 1 ? ` x${card.quantity}` : ''}</span>
+            ${card.status === 'missing' && card.affiliate?.url ? `<a class="deck-buy-link" href="${escapeHtml(card.affiliate.url)}" target="_blank" rel="sponsored noopener noreferrer">Comprar carta</a>` : ''}
           </div>
         </article>`).join('') || '<p class="deck-empty">Este deck ainda nao possui cartas.</p>'}
       </div>
